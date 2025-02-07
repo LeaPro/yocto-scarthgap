@@ -1,0 +1,1 @@
+from https://github.com/schnitzeltony/meta-qt5-extra/tree/master/recipes-support/lmdb

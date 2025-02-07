@@ -1,0 +1,104 @@
+# Prerequisites
+*.d
+!*.d/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables & binaries
+*.exe
+*.out
+*.app
+*.dtb
+
+# log files
+*.log
+
+# lock files
+*.lock
+
+# Other stuff
+bootlin-lab-data/
+build-*/cache/
+build-*/downloads/
+build-*/downloads
+build-*/sstate-cache/
+build-*/sstate-cache
+build-*/tmp/
+build-*/postBuild/images/
+sdk/
+sdk-installer/
+sdk-installer.zip
+**/\.vscode/ipch/
+.vscode/settings.json
+**/dummy_make_target.out
+**/__pycache__/
+*.pyc
+poky/bitbake/lib/bb/pysh/pyshtables\.py
+!poky/**/*.d
+
+# service binaries
+/**/application-server-service/files/application-server
+/**/application-server-service/files/fwUpdate
+/**/application-server-service/files/stm32flash
+/**/application-server-service/files/ipcTool
+/**/application-server-service/files/kvsTool
+/**/application-server-service/files/*.zip
+/**/cloud-proxy-service/files/cloud-proxy
+/**/leatcp-proxy-service/files/leatcp-proxy
+/**/sftp-monitor-service/files/MLO
+/**/sftp-monitor-service/files/u-boot.img
+
+# web UI
+web-ui-*/
+
+# misc application-server-service binaries
+meta-lea-arc/recipes-core/application-server-service/files/*.hex
+meta-lea-superdarc/recipes-core/application-server-service/files/*.hex
+meta-lea-dls/recipes-core/application-server-service/files/*.hex
+
+# .enc files
+*.enc
+
+#dsp build artifacts
+build-SuperDARC/workspace/.metadata/.plugins/org.eclipse.cdt.make.core/specs.c
+build-SuperDARC/workspace/.metadata/.plugins/org.eclipse.cdt.make.core/specs.cpp
+build-SuperDARC/workspace/.metadata/.plugins/org.eclipse.core.resources/.root/.indexes/properties.version
+build-SuperDARC/workspace/.metadata/.plugins/org.eclipse.core.runtime/.settings/org.eclipse.core.resources.prefs
+meta-lea-superdarc/recipes-core/application-server-service/files/SuperDARC.dxe
+meta-lea-superdarc/recipes-core/application-server-service/files/SuperDARC.ldr
+meta-lea-supershark/recipes-core/application-server-service/files/SuperDARC.dxe
+meta-lea-supershark/recipes-core/application-server-service/files/SuperDARC.ldr
+
+
+**/toolchainSetup
+
+docker/license.dat
+
+build-*/workspace/
+build-*/downloads/
+build-*/sstate-cache/
+
+build-*/conf/templateconf.cfg

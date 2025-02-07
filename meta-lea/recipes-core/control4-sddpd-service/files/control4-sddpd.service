@@ -1,0 +1,13 @@
+[Unit]
+Description=Control4 SDDPd service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c '/usr/sbin/sddpd'
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+

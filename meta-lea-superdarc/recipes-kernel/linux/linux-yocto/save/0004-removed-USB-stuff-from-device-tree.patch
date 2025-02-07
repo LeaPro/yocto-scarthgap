@@ -1,0 +1,47 @@
+From e7207723c12ece1f887b65bb2ee8e2a4ddd53308 Mon Sep 17 00:00:00 2001
+From: Bill Plunkett <bill@plunkware.com>
+Date: Mon, 9 Dec 2024 14:12:19 -0700
+Subject: [PATCH] removed USB stuff from device tree - was causing driver crash
+ on suspend/resume
+Upstream-Status: Pending
+
+
+---
+ arch/arm/boot/dts/am33xx.dtsi | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/am33xx.dtsi b/arch/arm/boot/dts/am33xx.dtsi
+index f09a61cac2dc..f0fbe9afe24a 100644
+--- a/arch/arm/boot/dts/am33xx.dtsi
++++ b/arch/arm/boot/dts/am33xx.dtsi
+@@ -32,10 +32,12 @@ aliases {
+ 		serial5 = &uart5;
+ 		d-can0 = &dcan0;
+ 		d-can1 = &dcan1;
++		/*
+ 		usb0 = &usb0;
+ 		usb1 = &usb1;
+ 		phy0 = &usb0_phy;
+ 		phy1 = &usb1_phy;
++		*/
+ 		ethernet0 = &cpsw_emac0;
+ 		ethernet1 = &cpsw_emac1;
+ 		spi0 = &spi0;
+@@ -332,7 +334,7 @@ mmc3: mmc@0 {
+ 				status = "disabled";
+ 			};
+ 		};
+-
++		/*
+ 		usb: target-module@47400000 {
+ 			compatible = "ti,sysc-omap4", "ti,sysc";
+ 			reg = <0x47400000 0x4>,
+@@ -460,7 +462,7 @@ cppi41dma: dma-controller@2000 {
+ 				#dma-requests = <256>;
+ 			};
+ 		};
+-
++		*/
+ 		ocmcram: sram@40300000 {
+ 			compatible = "mmio-sram";
+ 			reg = <0x40300000 0x10000>; /* 64k */
