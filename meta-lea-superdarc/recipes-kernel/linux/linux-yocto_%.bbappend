@@ -22,6 +22,7 @@ SRC_URI += "file://devtool-fragment.cfg \
             file://devtool-fragment4.scc \
             file://0001-added-am3352-device-tree-using-devtool-5.10.patch \
             file://0002-spidev-tweaks-5.10.patch \
+            file://0003-added-WILC-15.7-driver-from-yocto-kirkstone.patch \
             "
 SRC_URI:append = " \
                  file://am33xx.dtsi;subdir=git/arch/arm/boot/dts \

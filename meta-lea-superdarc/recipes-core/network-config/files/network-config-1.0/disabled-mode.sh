@@ -10,13 +10,10 @@ systemctl stop control4-sddpd &> /dev/null
 while [[ true ]] ; do
   systemctl is-active control4-sddpd
   if [[ $? = 0 ]] ; then
-    echo "still active"
     sleep 0.1
   else
-    echo "is NOT active, break out"
     break 1
   fi
-  echo "try again"
   systemctl stop control4-sddpd
 done
 

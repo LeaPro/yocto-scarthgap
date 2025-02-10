@@ -100,5 +100,6 @@ docker/license.dat
 build-*/workspace/
 build-*/downloads/
 build-*/sstate-cache/
-
 build-*/conf/templateconf.cfg
+build-*//conf/conf-notes.txt
+build-*//conf/conf-summary.txt

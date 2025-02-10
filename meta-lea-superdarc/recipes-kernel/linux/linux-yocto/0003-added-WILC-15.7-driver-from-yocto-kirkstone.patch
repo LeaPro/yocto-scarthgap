@@ -1,7 +1,7 @@
-From bfa03d0ba05b167caf70558d202d162a30fded06 Mon Sep 17 00:00:00 2001
-From: Bill Plunkett <plunkware@gmail.com>
-Date: Wed, 26 Jul 2023 13:03:11 -0600
-Subject: [PATCH] added WILC 15.7 driver (from yocto-hardknott)
+From ea7e17c7159f1404ba3180eb4d270d1869b42446 Mon Sep 17 00:00:00 2001
+From: Bill Plunkett <bill@plunkware.com>
+Date: Mon, 10 Feb 2025 12:59:21 -0700
+Subject: [PATCH] added WILC-15.7-driver from yocto-kirkstone
 Upstream-Status: Pending
 
 ---
@@ -25,8 +25,7 @@ Upstream-Status: Pending
  .../net/wireless/microchip/wilc1000/sysfs.c   |  107 ++
  .../net/wireless/microchip/wilc1000/wlan.c    | 1254 +++++++++++++----
  .../net/wireless/microchip/wilc1000/wlan.h    |  172 ++-
- .../wireless/mUpstream-Status: Pending
-icrochip/wilc1000/wlan_cfg.c    |  100 +-
+ .../wireless/microchip/wilc1000/wlan_cfg.c    |  100 +-
  .../wireless/microchip/wilc1000/wlan_cfg.h    |   11 +
  .../net/wireless/microchip/wilc1000/wlan_if.h |   39 +-
  23 files changed, 6315 insertions(+), 1349 deletions(-)
