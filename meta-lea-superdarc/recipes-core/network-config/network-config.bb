@@ -14,6 +14,7 @@ do_install() {
     #bbwarn "D is ${D}"
     install -d ${D}/etc/systemd/network
     install -m 0755 ${S}/sshEnable.sh ${D}/etc/systemd/network/
+    install -m 0755 ${S}/sshDisable.sh ${D}/etc/systemd/network/
     install -m 0755 ${S}/any.network.disabled ${D}/etc/systemd/network/
     install -m 0755 ${S}/10-eth0.network ${D}/etc/systemd/network/
     install -m 0755 ${S}/eth0.network.dhcp ${D}/etc/systemd/network/
