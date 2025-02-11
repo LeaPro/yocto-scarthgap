@@ -1,0 +1,19 @@
+From f7c1f2c6745fa61a59eada273c2bc93ef632151b Mon Sep 17 00:00:00 2001
+From: Bill Plunkett <plunkware@gmail.com>
+Date: Wed, 7 Jun 2023 19:49:39 -0600
+Subject: [PATCH] added am3352 device tree using devtool
+
+Upstream-Status: Pending
+
+diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+index 27ca1ca6e827..ecc04465731f 100644
+--- a/arch/arm/boot/dts/Makefile
++++ b/arch/arm/boot/dts/Makefile
+@@ -837,6 +837,7 @@ dtb-$(CONFIG_SOC_TI81XX) += \
+ 	dm8168-evm.dtb \
+ 	dra62x-j5eco-evm.dtb
+ dtb-$(CONFIG_SOC_AM33XX) += \
++  am3352-lea-superdarc.dtb \
+ 	am335x-baltos-ir2110.dtb \
+ 	am335x-baltos-ir3220.dtb \
+ 	am335x-baltos-ir5221.dtb \

@@ -1,0 +1,10 @@
+Starting in ARC firmware 2.0.2.43 a 4-minute wait time was added to the Blacktip firmware update process.  This is necessary for the -HV rail to discharge before asserting the power supply micro reset line.
+Newer versions of firmware properly shutdown the LV supplies on the power supply and do NOT need to wait for the rail to dicharge.
+
+If this file is present, it indicates the newer firmware is running and a wait is not required
+
+If it is NOT present, then a ~ 4-minute wait is required before asserting the PS reset line.
+
+This file is stored in the active partition.  Before starting a firmware update, one must look at the other partition for the presence of this file in order to know what to do.
+
+DB  7-23-2021

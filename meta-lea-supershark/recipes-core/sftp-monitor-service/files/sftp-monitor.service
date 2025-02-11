@@ -1,0 +1,13 @@
+[Unit]
+Description=SFTP monitor
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c '/usr/sbin/sftp-monitor.sh'
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+
