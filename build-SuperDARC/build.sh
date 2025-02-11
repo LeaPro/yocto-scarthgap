@@ -10,21 +10,21 @@ echo REBUILD_FLAG=$REBUILD_FLAG
 
 set -e # exit on error
 
-# ../yocto-toolchain.sh SuperDARC
+../yocto-toolchain.sh SuperDARC
 
-# ./build-uboot.sh
+./build-uboot.sh
 
-# make $REBUILD_FLAG -f kernel.mk
+make $REBUILD_FLAG -f kernel.mk
 
-# ./build-dsp.sh
+./build-dsp.sh
 
-# ./build-stm32-firmware.sh
+./build-stm32-firmware.sh
 
-# make $REBUILD_FLAG -f application-server-service.mk
+make $REBUILD_FLAG -f application-server-service.mk
 
-# make $REBUILD_FLAG -f cloud-proxy-service.mk
+make $REBUILD_FLAG -f cloud-proxy-service.mk
 
-# make $REBUILD_FLAG -f leatcp-proxy-service.mk
+make $REBUILD_FLAG -f leatcp-proxy-service.mk
 
 make $REBUILD_FLAG -f sftp-monitor-service.mk
 

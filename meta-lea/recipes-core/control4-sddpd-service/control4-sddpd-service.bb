@@ -14,7 +14,7 @@ SRC_URI = "file://Sddp.c \
            file://control4-sddpd.service \
           "
 
-FILES:${PN} += "/lib/systemd/system/control4-sddpd.service /usr/sbin/sddpd"
+FILES:${PN} += "/usr/lib/systemd/system/control4-sddpd.service /usr/sbin/sddpd"
 
 S = "${WORKDIR}"
 

@@ -101,5 +101,5 @@ build-*/workspace/
 build-*/downloads/
 build-*/sstate-cache/
 build-*/conf/templateconf.cfg
-build-*//conf/conf-notes.txt
-build-*//conf/conf-summary.txt
+build-*/conf/conf-notes.txt
+build-*/conf/conf-summary.txt
