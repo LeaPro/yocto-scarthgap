@@ -23,12 +23,9 @@ SRC_URI += "file://devtool-fragment.cfg \
             file://0001-added-am3352-device-tree-using-devtool-5.10.patch \
             file://0002-spidev-tweaks-5.10.patch \
             file://0003-added-WILC-15.7-driver-from-yocto-kirkstone.patch \
+            file://am33xx-lea-dls.dtsi;subdir=git/arch/arm/boot/dts \
+            file://am3352-lea-dls.dts;subdir=git/arch/arm/boot/dts \
             "
-SRC_URI:append = " \
-                 file://am33xx.dtsi;subdir=git/arch/arm/boot/dts \
-                 file://am3352-lea-dls.dts;subdir=git/arch/arm/boot/dts \
-                 "
-
 do_install:append() {
     # create a symlink in /boot named am335x-boneblack.dtb for compatibility with legacy u-boot environment
     ln -sf am3352-lea-dls.dtb ${D}/boot/am335x-boneblack.dtb

@@ -13,7 +13,7 @@ index 27ca1ca6e827..ecc04465731f 100644
  	dm8168-evm.dtb \
  	dra62x-j5eco-evm.dtb
  dtb-$(CONFIG_SOC_AM33XX) += \
-+  am3352-lea-superdarc.dtb \
++  am3352-lea-arc.dtb \
  	am335x-baltos-ir2110.dtb \
  	am335x-baltos-ir3220.dtb \
  	am335x-baltos-ir5221.dtb \

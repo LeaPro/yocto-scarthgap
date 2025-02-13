@@ -4,10 +4,10 @@
  */
 /dts-v1/;
 
-#include "am33xx.dtsi"
+#include "am33xx-lea-superdarc.dtsi"
 
 / {
-	model = "LEA (D)ARC";
+	model = "LEA SuperDARC";
 	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 };
 
