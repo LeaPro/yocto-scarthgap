@@ -1,6 +1,5 @@
-# Prerequisites
-*.d
-!*.d/
+# Prerequisites in 'obj' directories
+**/obj/**/*.d
 
 # Compiled Object files
 *.slo
@@ -57,7 +56,6 @@ sdk-installer.zip
 **/__pycache__/
 *.pyc
 poky/bitbake/lib/bb/pysh/pyshtables\.py
-!poky/**/*.d
 
 # service binaries
 /**/application-server-service/files/application-server
