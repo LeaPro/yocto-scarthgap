@@ -1,0 +1,82 @@
+# this Dockerfile creates an image that works on linux mint 22.1 (ubuntu 24.04 based)
+#
+# docker build --tag "lea-yocto-scarthgap" --build-arg "USER=$(whoami)" --build-arg "host_uid=$(id -u)" --build-arg "host_gid=$(id -g)"
+#
+# run with a variation of the following command (note mac-address for ADI CCES license and yocto downloads/sstate-cache symlink mapping)
+# docker run --rm --mac-address="a4:4c:c8:29:84:c4" -it -v $HOME:$HOME -v /media/wap/HDD/yocto-scarthgap-shared/downloads:/media/wap/HDD/yocto-scarthgap-shared/downloads -v /media/wap/HDD/yocto-scarthgap-shared/sstate-cache:/media/wap/HDD/yocto-scarthgap-shared/sstate-cache lea-yocto-scarthgap
+
+FROM ubuntu:22.04
+
+user root
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update
+RUN apt install -y gawk wget git-core diffstat zip unzip texinfo \
+    gcc-multilib build-essential chrpath socat file cpio python3 \
+    python3-pip python3-pexpect xz-utils debianutils debconf-utils iputils-ping \
+    libsdl1.2-dev xterm tar locales net-tools rsync sudo vim curl zstd \
+    liblz4-tool libssl-dev bc lzop libgnutls28-dev efitools git-lfs \
+    gdb xxd tmux libncurses-dev
+
+RUN pip3 install numpy
+RUN pip3 install websockets
+    
+# Set up locales
+RUN locale-gen en_US.UTF-8 && \
+    update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
+
+# recent versions of arm-none-eabi-gcc must be installed manually (thanks a lot, ARM!)
+COPY arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz /opt
+RUN cd /opt && \
+    tar -xf arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz && \
+    rm arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz
+ENV PATH="/opt/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi/bin:$PATH"
+
+# installing/licensing ADI Sharc tools is a pain (thanks a lot, ADI!)
+# license file required at .analog/cces/license.dat
+RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y \
+    libc6:i386 libncurses5:i386 libstdc++6:i386 libgtk2.0-0:i386 libxtst6:i386 \
+    gtk2-engines-murrine:i386 libcanberra-gtk-module:i386 gtk2-engines:i386
+COPY adi-CrossCoreEmbeddedStudio-linux-x86-2.10.1.deb /opt
+COPY com.analog.crosscore.incubation.blackfin_sharc_linux.stage_2.10.1.202202091957.jar /opt
+# wap@boyd:$ debconf-show adi-cces-2.10.1
+# debconf: DbDriver "passwords" warning: could not open /var/cache/debconf/passwords.dat: Permission denied
+# * adi-cces-2.10.1/read-sla:
+# * adi-cces-2.10.1/run-ocd-config: false
+#   adi-cces-2.10.1/error-sla:
+# * adi-cces-2.10.1/accept-sla: true
+RUN echo "adi-cces-2.10.1 adi-cces-2.10.1/accept-sla boolean true" | debconf-set-selections
+RUN cd /opt && \
+    dpkg -i adi-CrossCoreEmbeddedStudio-linux-x86-2.10.1.deb && \
+    unzip com.analog.crosscore.incubation.blackfin_sharc_linux.stage_2.10.1.202202091957.jar support_files.tar.gz && \
+    tar xvf support_files.tar.gz -C /opt/analog/cces/2.10.1
+
+# install version Make-4.4.1 for .WAIT target needed for new fw update scheme
+COPY make-4.4.1.tar.gz /opt
+RUN cd /opt && \
+    tar -xzf make-4.4.1.tar.gz && \
+    cd /opt/make-4.4.1 && \
+    ./configure && make && make install && \
+    rm /opt/make-4.4.1.tar.gz && rm -r /opt/make-4.4.1
+
+# Yocto needs 'source' command for setting up the build environment, so replace
+# the 'sh' alias to 'bash' instead of 'dash'.
+RUN rm /bin/sh && ln -s bash /bin/sh
+
+# Add your user to sudoers
+ARG USER
+RUN echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} && \
+    chmod 0440 /etc/sudoers.d/${USER}
+
+# Set the arguments for host_id and user_id
+ARG host_uid \
+    host_gid
+RUN groupadd -f -g $host_gid $USER && \ 
+    useradd -g $host_gid -m -s /bin/bash -u $host_uid $USER
+
+# Yocto builds should run as a normal user.
+USER $USER
+
