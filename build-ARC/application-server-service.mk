@@ -32,7 +32,10 @@ $(RECIPE_DIR)/files/$(BIN): $(SOURCE_FILES)
 	cd $(APPLICATION_DIR) && make clean
 	cd $(APPLICATION_DIR) && ./build.sh -j4
 	cp $(APPLICATION_DIR)/obj/$(BIN) $(RECIPE_DIR)/files
-	./build-service.sh $(BIN)-service
+
+clean:
+	rm $(RECIPE_DIR)/files/$(BIN)
+	cd $(APPLICATION_DIR) && make clean
 
 # target to print variables; invoked with 'make print-VariableName'
 print-%:

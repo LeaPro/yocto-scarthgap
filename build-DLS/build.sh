@@ -12,10 +12,6 @@ set -e # exit on error
 
 ../yocto-toolchain.sh DLS
 
-./build-uboot.sh
-
-make $REBUILD_FLAG -f kernel.mk
-
 ./build-stm32-firmware.sh
 
 make $REBUILD_FLAG -f application-server-service.mk
@@ -24,7 +20,9 @@ make $REBUILD_FLAG -f cloud-proxy-service.mk
 
 make $REBUILD_FLAG -f leatcp-proxy-service.mk
 
-make $REBUILD_FLAG -f sftp-monitor-service.mk
+./build-uboot.sh
+
+make $REBUILD_FLAG -f kernel.mk
 
 ./build-rootfs.sh
 

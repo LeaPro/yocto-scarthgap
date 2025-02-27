@@ -12,10 +12,6 @@ set -e # exit on error
 
 ../yocto-toolchain.sh SuperDARC
 
-./build-uboot.sh
-
-make $REBUILD_FLAG -f kernel.mk
-
 ./build-dsp.sh
 
 ./build-stm32-firmware.sh
@@ -26,7 +22,9 @@ make $REBUILD_FLAG -f cloud-proxy-service.mk
 
 make $REBUILD_FLAG -f leatcp-proxy-service.mk
 
-make $REBUILD_FLAG -f sftp-monitor-service.mk
+./build-uboot.sh
+
+make $REBUILD_FLAG -f kernel.mk
 
 ./build-rootfs.sh
 
