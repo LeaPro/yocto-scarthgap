@@ -123,7 +123,4 @@ ip link set wlan0 down &> /dev/null
 sleep 2
 systemctl start control4-sddpd &> /dev/null
 
-# workaround for broadcasting with linklocal address
-route add -net 255.255.255.255 netmask 255.255.255.255 dev eth0
-
 popd &> /dev/null

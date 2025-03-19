@@ -10,3 +10,6 @@ LinkLocalAddressing=ipv4
 ClientIdentifier=mac
 RouteMetric=10
 
+[Route]
+Destination=255.255.255.255/32
+Gateway=0.0.0.0
