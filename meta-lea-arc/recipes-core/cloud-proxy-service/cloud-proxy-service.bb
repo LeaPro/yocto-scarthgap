@@ -7,6 +7,7 @@ PR = "r1"
 SRC_URI =  " \
     file://cloud-proxy.service \
     file://cloud-proxy \
+    file://SendToCloudList.json \
 "
 
 do_compile () {
@@ -27,6 +28,7 @@ do_install () {
 
     install -d ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/cloud-proxy ${D}/${sbindir}
+    install -m 0755 ${WORKDIR}/SendToCloudList.json ${D}/${sbindir}
 
 }
 
