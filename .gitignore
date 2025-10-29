@@ -45,7 +45,8 @@ build-*/downloads/
 build-*/downloads
 build-*/sstate-cache/
 build-*/sstate-cache
-build-*/tmp/
+build-*/tmp*/
+build-*/deploy-ti/
 build-*/postBuild/images/
 sdk/
 sdk-installer/
