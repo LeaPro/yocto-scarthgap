@@ -23,7 +23,7 @@ while [ 1 = 1 ] ; do
     if [[ $FILE == *tar.xz.enc ]] ; then
       TARBALL=${FILE%.*}
       echo "decrypting"
-      ipcTool --url=/misc --method=set --params='{"fwUpdateStatus":"Decrypting"}' || true
+      ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"Decrypting"}' || true
       openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k SSSS
       # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k SSSS
       if [[ $? = 0 ]] ; then
@@ -44,7 +44,7 @@ while [ 1 = 1 ] ; do
           fi
           PART="/dev/mmcblk1p$EMMCPART"
           echo "extracting $TARBALL into $PART"
-          ipcTool --url=/misc --method=set --params='{"fwUpdateStatus":"Extraction"}' || true
+          ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"Extraction"}' || true
           umount /mnt/rootfs || true
           mkdir -p /mnt/rootfs
           mount $PART /mnt/rootfs
@@ -55,7 +55,7 @@ while [ 1 = 1 ] ; do
           echo 0 > /sys/block/mmcblk1boot1/force_ro # required to write u-boot env vars
           fw_setenv emmcpart $EMMCPART
           echo "extraction complete"
-          ipcTool --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionComplete"}' || true
+          ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionComplete"}' || true
           sleep 2
           rm $TARBALL
           umount /mnt/rootfs
@@ -65,7 +65,7 @@ while [ 1 = 1 ] ; do
         set +e
       else
         echo "decrypt failed"
-        ipcTool --url=/misc --method=set --params='{"fwUpdateStatus":"DecryptingFail"}' || true
+        ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"DecryptingFail"}' || true
         sleep 5
       fi
     # copy 802.1x certificates to /mnt/data/uploaded-certs
@@ -80,7 +80,7 @@ while [ 1 = 1 ] ; do
       fi
     else
       echo "unsupported file type"
-      ipcTool --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionFail"}' || true
+      ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionFail"}' || true
       sleep 5
     fi
     rm $FILE
