@@ -1,0 +1,118 @@
+{
+  "UAC": {
+    "key": "",
+    "roles": {}
+  },
+  "lockedProperties": {
+    "groups": {}
+  },
+  "users": {
+    "userPass": ""
+  },
+  "amp": {
+    "deviceInfo": {
+      "deviceName": "DeviceName",
+      "venueName": "VenueName",
+      "rackName": "RackName",
+      "rackPosition": "RackPosition",
+      "installerName": "Installer Name",
+      "installerContactInfo": "Installer Contact Info",
+      "numInputs": 4.0,
+      "numOutputs": 4.0,
+      "modelID": "Connect Series CS Touch V2",
+      "serialNumber": "124183027",
+      "dateOfMfg": "240718165850",
+      "dateOfInstallation": "",
+      "hardwareID": "0",
+      "hardwareRevision": "2",
+      "ampHardwareRevision": "0",
+      "assetTagNumber": "Asset Tag ID",
+      "firmwareVersion": "4.0.2.3",
+      "powerSupplyfirmwareVersion": "N/A",
+      "upTime": "5 days  2 hours  18 minutes",
+      "mfgTest": " 100"
+    }
+  },
+  "network": {
+    "apConfig": {
+      "ssid": "CS124D-3027",
+      "password": "",
+      "buttonEnable": true,
+      "active": false,
+      "channel": 1.0
+    },
+    "wifi": {
+      "ssid": "",
+      "password": "",
+      "dhcp": true,
+      "ip": "",
+      "gateway": "",
+      "dns1": "",
+      "dns2": "",
+      "mac": "00:00:05:00:00:00",
+      "enable": false,
+      "signalStrength": -1000.0
+    },
+    "ethernet": {
+      "dhcp": true,
+      "ip": "",
+      "gateway": "",
+      "dns1": "",
+      "dns2": "",
+      "mac": "58:A1:5F:FA:4D:FC",
+      "dot1xMode": "Disabled",
+      "dot1xIdentity": "",
+      "dot1xPassword": "",
+      "dot1xAnonymousIdentity": "",
+      "dot1xDomain": "",
+      "dot1xCACertValid": "no cert",
+      "dot1xClientCertValid": "no cert",
+      "dot1xClientKeyCheck": "no key",
+      "dot1xUploadedCACertValid": "no cert",
+      "dot1xUploadedClientCertValid": "no cert",
+      "dot1xUploadedClientKeyCheck": "no key",
+      "dot1xSaveUploadedCerts": false
+    }
+  },
+  "discovery": {
+    "devices": "[{\"ip\":\"192.168.1.24\",\"mac\":\"58:A1:5F:FA:4D:FC\",\"modelID\":\"Connect Series Model 124D\",\"serialNumber\":\"124183027\"}]"
+  },
+  "misc": {
+    "subscriptionPeriod": 500.0,
+    "passwordProtected": false,
+    "userName": "guest",
+    "verifyPassword": false,
+    "findMe": false,
+    "connectionType": "Wired",
+    "ipAddr": "192.168.1.24",
+    "ssid": "",
+    "tcpServerEnable": true,
+    "reboot": false,
+    "fwUpdateStatus": "None",
+    "fwDownloadProgress": 0.0,
+    "fwUpdateInProgress": false
+  },
+  "cloud": {
+    "registrationEndpoint": "https://api.test.leaprofessional.cloud/devices/register",
+    "registrationToken": "",
+    "sensorPublishStart": false,
+    "sensorPublishDuration": 30.0,
+    "sensorPublishRemaining": 0.0
+  },
+  "group": {
+    "membership": {}
+  },
+  "logs": {
+    "faults": "",
+    "events": ""
+  },
+  "NSTProxy": {
+    "enable": true,
+    "devices": [],
+    "send": {},
+    "recv": {},
+    "fwVersion": "0.1.0.420",
+    "fwStatus": "OK",
+    "fwUpdate": false
+  }
+}

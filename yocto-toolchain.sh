@@ -9,6 +9,9 @@ elif [[ "$1" == "ARC" ]] ; then
 elif [[ "$1" == "DLS" ]] ; then
   echo "using DLS SDK"
   TARGET=DLS
+elif [[ "$1" == "Pilotfish" ]] ; then
+  echo "using Pilotfish SDK"
+  TARGET=Pilotfish
 elif [[ "$1" == "SuperDARC" ]] ; then
   echo "using SuperDARC SDK"
   TARGET=SuperDARC
@@ -31,6 +34,7 @@ declare -a arr=("../u-boot"
                 "../AngelShark/Linux/application-server" 
                 "../AngelShark/Linux/fwUpdate"
                 "../DwarfLanternShark/Linux/application-server" 
+                "../Pilotfish/Linux/application-server" 
                 "../SuperDARC/application-server"
                 "../SuperShark/application-server"
                 "../WebsocketAPI/cloud-proxy"

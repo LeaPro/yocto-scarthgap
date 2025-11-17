@@ -1,0 +1,15 @@
+[Match]
+Name=eth0
+KernelCommandLine=!nfsroot
+
+[Network]
+DHCP=ipv4
+LinkLocalAddressing=ipv4
+
+[DHCP]
+ClientIdentifier=mac
+RouteMetric=10
+
+[Route]
+Destination=255.255.255.255/32
+Scope=link

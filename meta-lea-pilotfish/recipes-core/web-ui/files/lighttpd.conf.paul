@@ -1,0 +1,16 @@
+server.modules = ( "mod_setenv" )
+mimetype.assign = (
+  ".html" => "text/html", 
+  ".txt" => "text/plain",
+  ".jpg" => "image/jpeg",
+  ".png" => "image/png",
+  ".js" => "application/javascript",
+  ".css" => "text/css"
+)
+index-file.names = ( "index.html" )
+setenv.add-response-header = ( "Cache-Control" => "max-age=31536000" )
+$HTTP["url"] !~ "^/static/" {
+    server.error-handler-404 = "/index.html"
+    setenv.add-response-header = ( "Cache-Control" => "no-cache" )
+}
+
