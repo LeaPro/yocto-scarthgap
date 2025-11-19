@@ -12,8 +12,6 @@ set -e # exit on error
 
 ../yocto-toolchain.sh Pilotfish
 
-# ./build-stm32-firmware.sh
-
 make $REBUILD_FLAG -f application-server-service.mk
 
 make $REBUILD_FLAG -f cloud-proxy-service.mk

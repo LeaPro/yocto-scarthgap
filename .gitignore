@@ -77,6 +77,7 @@ web-ui-*/
 meta-lea-arc/recipes-core/application-server-service/files/*.hex
 meta-lea-superdarc/recipes-core/application-server-service/files/*.hex
 meta-lea-dls/recipes-core/application-server-service/files/*.hex
+meta-lea-pilotfish/recipes-core/application-server-service/files/*.hex
 
 # .enc files
 *.enc
