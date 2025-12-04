@@ -7,10 +7,8 @@ PR = "r1"
 SRC_URI =  " \
     file://application-server.service \
     file://application-server \
-    file://stm32flash \
     file://ipcTool \
     file://kvsTool \
-    file://DLS.zip;unpack=0 \
 "
 
 do_compile () {
@@ -31,10 +29,8 @@ do_install () {
 
     install -d ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/application-server ${D}/${sbindir}
-    install -m 0755 ${WORKDIR}/stm32flash ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/ipcTool ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/kvsTool ${D}/${sbindir}
-    install -m 0755 ${WORKDIR}/DLS.zip ${D}/${sbindir}
 }
 
 NATIVE_SYSTEMD_SUPPORT = "1"
