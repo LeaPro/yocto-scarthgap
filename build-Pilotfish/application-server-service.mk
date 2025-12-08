@@ -7,16 +7,12 @@ IPCTOOL_DIR=../../WebsocketAPI/ipcTool
 KVSTOOL_DIR=../../WebsocketAPI/kvsTool
 RECIPE_DIR=../meta-lea-pilotfish/recipes-core/$(BIN)-service
 SOURCE_FILES=$(shell find $(APPLICATION_DIR) -type f)
-SOURCE_FILES+=$(shell find $(STM32FLASH_DIR) -type f ! -name '*.txt')
 SOURCE_FILES+=$(shell find $(IPCTOOL_DIR) -type f ! -name '*.txt')
 SOURCE_FILES+=$(shell find $(KVSTOOL_DIR) -type f ! -name '*.txt')
 SOURCE_FILES+=$(shell find $(RECIPE_DIR) -type f ! -name $(BIN))
 
 # rebuild if any source files are newer than the service binary
 $(RECIPE_DIR)/files/$(BIN): $(SOURCE_FILES)
-	cd $(STM32FLASH_DIR) && make clean
-	cd $(STM32FLASH_DIR) && ./build.sh -j4
-	cp $(STM32FLASH_DIR)/stm32flash $(RECIPE_DIR)/files
 	cd $(IPCTOOL_DIR) && make clean
 	cd $(IPCTOOL_DIR) && ./build.sh -j4
 	cp $(IPCTOOL_DIR)/obj/ipcTool $(RECIPE_DIR)/files
