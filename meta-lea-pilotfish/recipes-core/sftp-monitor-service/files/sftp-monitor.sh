@@ -57,41 +57,12 @@ while [ 1 = 1 ] ; do
           echo "extraction complete"
           ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionComplete"}' || true
           sleep 2
-          # Wait for hvRailSequencerState to become "Off" with a timeout of 20 seconds
-          TIMEOUT=20
-          SLEEP_INTERVAL=1
-          ELAPSED=0
-          RAIL_STATE=""
-
-          while [[ $ELAPSED -lt $TIMEOUT ]]; do
-            # Query hvRailSequencerState
-            RAIL_STATE=$(ipcTool --port=1236 --url=/amp/powerSupply --method=get --params='["hvRailSequencerState"]' | jq -r '.results.hvRailSequencerState')
-
-            if [[ $RAIL_STATE = "Off" ]]; then
-              echo "hvRailSequencerState is Off, proceeding with rm, umount, and reboot"
-              rm $TARBALL
-              umount /mnt/rootfs
-              sleep 1
-              reboot
-              break
-            fi
-
-            echo "Waiting for hvRailSequencerState to become Off, current state: $RAIL_STATE"
-            sleep $SLEEP_INTERVAL
-            ELAPSED=$((ELAPSED + SLEEP_INTERVAL))
-          done
-
-          if [[ $RAIL_STATE != "Off" ]]; then
-            echo "Timeout reached. hvRailSequencerState did not become Off, proceeding with rm, umount, and reboot"
-            rm $TARBALL
-            umount /mnt/rootfs
-            sleep 1
-            reboot
-            break
-          fi
+          rm $TARBALL
+          umount /mnt/rootfs
+          sleep 1
+          reboot
         done
         set +e
-
       else
         echo "decrypt failed"
         ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"DecryptingFail"}' || true
