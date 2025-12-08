@@ -24,8 +24,8 @@ while [ 1 = 1 ] ; do
       TARBALL=${FILE%.*}
       echo "decrypting"
       ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"Decrypting"}' || true
-      openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k DLS!
-      # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k DLS!
+      openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k PFSH
+      # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k PFSH
       if [[ $? = 0 ]] ; then
         rm $FILE
         # format eMMC if we're not running from it

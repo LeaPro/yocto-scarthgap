@@ -31,4 +31,4 @@ INFILE=./tmp/deploy/images/lea-pilotfish/core-image-minimal-lea-pilotfish.rootfs
 OUTFILE=postBuild/images/Pilotfish-${VERSION}-LEA-pilotfish-${DATE}.tar.xz.enc
 mkdir -p postBuild/images
 rm -rf $OUTFILE
-openssl enc -aes-256-cbc -salt -in $INFILE -out $OUTFILE -k Pilotfish!
+openssl enc -aes-256-cbc -salt -in $INFILE -out $OUTFILE -k PFSH
