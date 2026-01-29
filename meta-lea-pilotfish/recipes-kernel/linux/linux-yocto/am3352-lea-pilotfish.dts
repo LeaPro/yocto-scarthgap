@@ -403,9 +403,12 @@
 };
 
 &cpsw_emac0 {
-	phy-handle = <&ethphy0>;
-	phy-mode = "mii";
-	ti,dual-emac-pvid = <1>;
+    phy-mode = "mii";
+
+    fixed-link {
+        speed = <100>;
+        full-duplex;
+    };
 };
 
 &cpsw_emac1 {
@@ -420,13 +423,7 @@
 };
 
 &davinci_mdio {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&davinci_mdio_default>;
-	pinctrl-1 = <&davinci_mdio_sleep>;
- status = "okay";
-	ethphy0: ethernet-phy@0 {
-		reg = <0>;
-	};
+    status = "disabled";
 };
 
 &aes {
