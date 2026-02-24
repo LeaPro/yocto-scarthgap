@@ -2,6 +2,7 @@
 # 2 - clean sftp directory
 # 3 - continously monitor SFTP directory for firmware update archive
 #     when found:
+#      - check for compatibility with the hw
 #      - decrypt/extract archive into eMMC a/b partition
 #      - toggle eMMC a/b partition
 #      - reboot
@@ -19,6 +20,36 @@ while [ 1 = 1 ] ; do
     echo "dir is $DIR, op is $OP, file is $FILE"
     /bin/sleep 1s
     pushd $DIR
+    # Get the amp hardware revision from kvs for use in the compatibility test
+    AMP_HW_REV=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["ampHardwareRevision"]' | jq -r '.result.ampHardwareRevision')
+    if [[ "$AMP_HW_REV" =~ ^[0-9]+$ ]] && [[ "$AMP_HW_REV" -gt 2 ]]; then
+        echo "Verify $FILE firmware supports hwRev [${AMP_HW_REV}]..."
+        # Minimum firmware version needed for DLS hwRev > 2 (adcUpdate), older fw doesn't know about new hw changes.
+        MIN_REQUIRED_VERSION="4.1.2"
+        # Filename must start with DLS and have "-" seperated version numbers at the beginning, custom characters are allowed beyond that.
+        if [[ $FILE =~ ^DLS-([0-9]+-[0-9]+-[0-9]+) ]]; then
+            RAW_VER=${BASH_REMATCH[1]}
+            FILE_VERSION=${RAW_VER//-/.}
+            # check if FILE_VERSION is at least MIN_REQUIRED_VERSION
+            if [ "$(printf '%s\n%s' "$MIN_REQUIRED_VERSION" "$FILE_VERSION" | sort -V | head -n1)" == "$MIN_REQUIRED_VERSION" ]; then
+                echo "Yes! $FILE_VERSION passed version check (>= $MIN_REQUIRED_VERSION)."
+                # Proceed with the update
+            else
+                echo "No! $FILE_VERSION is older than $MIN_REQUIRED_VERSION. Deleting."
+                ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"HwNotSupportedInFw"}' || true
+                rm $FILE
+                sleep 5
+                exit 1
+            fi
+        else
+            echo "DEBUG: Captured NUM1=[${BASH_REMATCH[1]}] NUM2=[${BASH_REMATCH[2]}] NUM3=[${BASH_REMATCH[3]}]"
+            echo "filename format is invalid, must start with DLS-x-x-x-x Deleting."
+            rm $FILE
+            exit 1
+        fi
+    else
+        echo "The detected hwRev [${AMP_HW_REV}] supports all versions of firmware."
+    fi
     # f/w updates require a tar.xz archive encrypted with openssl
     if [[ $FILE == *tar.xz.enc ]] ; then
       TARBALL=${FILE%.*}
