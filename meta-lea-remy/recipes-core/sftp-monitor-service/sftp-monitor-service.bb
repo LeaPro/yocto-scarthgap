@@ -3,6 +3,7 @@ DESCRIPTION = "Script to monitor SFTP directory and install firmware updates"
 LICENSE = "CLOSED"
 PR = "r1"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
+RDEPENDS:${PN} += "bash"
 
 SRC_URI =  " \
     file://sftp-monitor.service \

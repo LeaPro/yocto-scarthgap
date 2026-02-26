@@ -1,3 +1,4 @@
+#!/bin/bash
 # 1 - prepare eMMC on startup (assumes format-eMMC.sh in same directory as this script)
 # 2 - clean sftp directory
 # 3 - continously monitor SFTP directory for firmware update archive
@@ -21,14 +22,15 @@ while [ 1 = 1 ] ; do
     /bin/sleep 1s
     pushd $DIR
     # f/w updates require a tar.xz archive encrypted with openssl
-    if [[ $FILE == *tar.xz.enc ]] ; then
-      TARBALL=${FILE%.*}
-      echo "decrypting"
-      touch /usr/sbin/decrypting
-      openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k DTSB
+    #if [[ $FILE == *tar.xz.enc ]] ; then
+    if [[ $FILE == *tar.xz ]] ; then
+      TARBALL=${FILE}
+      #TARBALL=${FILE%.*}
+      #echo "decrypting"
+      #openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k DTSB
       # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k DTSB
       if [[ $? = 0 ]] ; then
-        rm $FILE
+        #rm $FILE
         # format eMMC if we're not running from it
         mount | grep -e "${EMMC}.* on /"
         if [[ $? != 0 ]] ; then
@@ -45,7 +47,6 @@ while [ 1 = 1 ] ; do
           fi
           PART="/dev/${EMMC}p$EMMCPART"
           echo "extracting $TARBALL into $PART"
-          touch /usr/sbin/extracting
           mkdir -p /mnt/rootfs
           mount $PART /mnt/rootfs
           export EXTRACT_UNSAFE_SYMLINKS=1
@@ -55,14 +56,6 @@ while [ 1 = 1 ] ; do
           echo 0 > /sys/block/${EMMC}boot1/force_ro # required to write u-boot env vars
           fw_setenv emmcpart $EMMCPART
           echo "extraction complete"
-          touch /usr/sbin/extractionComplete
-          WAITFILE=/usr/sbin/fwUpdateDontWait.txt
-          if [[ -e "$WAITFILE" ]]; then
-            cp -f /usr/sbin/fwUpdateDontWait.txt /mnt/rootfs/usr/sbin/lastFwUpdateDontWait.txt
-            echo "fwUpdateDontWait file found"
-          else
-            echo "fwUpdateDontWait not found! wait for HV rails to discharge in fwUpdate"
-          fi
           sleep 2
           rm $TARBALL
           set +e # don't exit on non-zero return code
@@ -70,13 +63,10 @@ while [ 1 = 1 ] ; do
           while [[ true ]] ; do
             systemctl is-active application-server
             if [[ $? = 0 ]] ; then
-              echo "still active"
               sleep 1
             else
-              echo "is NOT active, break out"
               break 1
             fi 
-            echo "try again"
             systemctl stop application-server
           done
           set -e # exit on error
@@ -89,7 +79,6 @@ while [ 1 = 1 ] ; do
         set +e
       else
         echo "decrypt failed"
-        touch /usr/sbin/decryptFailed
         sleep 5
       fi
     # copy 802.1x certificates to /mnt/data/uploaded-certs
@@ -104,7 +93,6 @@ while [ 1 = 1 ] ; do
       fi
     else
       echo "unsupported file type"
-        touch /usr/sbin/badFile
         sleep 5
     fi
     rm $FILE
