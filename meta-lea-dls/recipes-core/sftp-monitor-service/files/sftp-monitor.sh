@@ -28,7 +28,7 @@ while [ 1 = 1 ] ; do
         # Minimum firmware version needed for adcUpdate hw, older fw doesn't know about new hw changes.
         MIN_REQUIRED_VERSION="4.2.0"
         # Extract version from filename using regex
-        if [[ $FILE =~ ([0-9]+-[0-9]+-[0-9]+) ]]; then
+        if [[ $FILE =~ ([0-9]+-[0-9]+-[0-9]+-[0-9]+) ]]; then
             FILE_VERSION="${BASH_REMATCH[1]//-/.}"
             # check if FILE_VERSION is at least MIN_REQUIRED_VERSION
             if [ "$(printf '%s\n%s' "$MIN_REQUIRED_VERSION" "$FILE_VERSION" | sort -V | head -n1)" == "$MIN_REQUIRED_VERSION" ]; then
@@ -42,8 +42,7 @@ while [ 1 = 1 ] ; do
                 exit 1
             fi
         else
-            echo "DEBUG: Captured NUM1=[${BASH_REMATCH[1]}] NUM2=[${BASH_REMATCH[2]}] NUM3=[${BASH_REMATCH[3]}]"
-            echo "filename format is invalid, must start with DLS-x-x-x-x Deleting."
+            echo "filename is invalid $FILE, can't be evaluated"
             rm $FILE
             exit 1
         fi
