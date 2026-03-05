@@ -26,7 +26,7 @@ while [ 1 = 1 ] ; do
     if [[ $REVERSE_COMPATIBLE_HW == "false" ]]; then
         echo "Verify $FILE firmware supports hwRev $REVERSE_COMPATIBLE_HW"
         # Minimum firmware version needed for ASBT adcUpdate hw, older fw doesn't know about new hw changes.
-        MIN_REQUIRED_VERSION="4.1.2"
+        MIN_REQUIRED_VERSION="4.2.0"
         # Filename must start with ASBT and have "-" seperated version numbers at the beginning, custom characters are allowed beyond that.
         if [[ $FILE =~ ^ASBT-([0-9]+-[0-9]+-[0-9]+) ]]; then
             RAW_VER=${BASH_REMATCH[1]}
