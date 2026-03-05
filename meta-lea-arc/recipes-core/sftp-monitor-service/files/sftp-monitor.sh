@@ -21,16 +21,14 @@ while [ 1 = 1 ] ; do
     pushd $DIR
     # Get the ampUpdateHw flag from kvs for use in the compatibility test (true = requires newer fw, false = compatible with all fw versions)
     REVERSE_COMPATIBLE_HW=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["reverseCompatibleHw"]' | jq -r '.result.reverseCompatibleHw')
-    echo "Value: '${REVERSE_COMPATIBLE_HW}'"
-    echo "Length: ${#REVERSE_COMPATIBLE_HW}"
+    AMP_HW_REV=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["hardwareID"]' | jq -r '.result.hardwareID')
     if [[ $REVERSE_COMPATIBLE_HW == "false" ]]; then
-        echo "Verify $FILE firmware supports hwRev $REVERSE_COMPATIBLE_HW"
+        echo "Verify $FILE firmware supports hwRev [${AMP_HW_REV}]..."
         # Minimum firmware version needed for ASBT adcUpdate hw, older fw doesn't know about new hw changes.
         MIN_REQUIRED_VERSION="4.2.0"
-        # Filename must start with ASBT and have "-" seperated version numbers at the beginning, custom characters are allowed beyond that.
-        if [[ $FILE =~ ^ASBT-([0-9]+-[0-9]+-[0-9]+) ]]; then
-            RAW_VER=${BASH_REMATCH[1]}
-            FILE_VERSION=${RAW_VER//-/.}
+        # Extract version from filename using regex
+        if [[ $FILE =~ ([0-9]+-[0-9]+-[0-9]+) ]]; then
+            FILE_VERSION="${BASH_REMATCH[1]//-/.}"
             # check if FILE_VERSION is at least MIN_REQUIRED_VERSION
             if [ "$(printf '%s\n%s' "$MIN_REQUIRED_VERSION" "$FILE_VERSION" | sort -V | head -n1)" == "$MIN_REQUIRED_VERSION" ]; then
                 echo "Yes! $FILE_VERSION passed version check (>= $MIN_REQUIRED_VERSION)."
@@ -49,7 +47,7 @@ while [ 1 = 1 ] ; do
             exit 1
         fi
     else
-        echo "The detected hwRev supports all versions of firmware."
+        echo "The detected hwRev [${AMP_HW_REV}] supports all versions of firmware."
     fi
     # f/w updates require a tar.xz archive encrypted with openssl
     if [[ $FILE == *tar.xz.enc ]] ; then
