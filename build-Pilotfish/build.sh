@@ -20,9 +20,9 @@ make $REBUILD_FLAG -f leatcp-proxy-service.mk
 
 ./build-uboot.sh
 
-make $REBUILD_FLAG -f kernel.mk
-
 ./build-rootfs.sh
+
+make $REBUILD_FLAG -f kernel.mk
 
 # rename/encrypt the compressed rootfs tarball- note that we now get a warning about 'deprecated key derivation' - not sure if we can change this and maintain compatibility with deployed sftp-monitor-service decryption
 DATE=`date +%m-%d-%Y`
