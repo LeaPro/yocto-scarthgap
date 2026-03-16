@@ -7,6 +7,13 @@
 #include "am33xx-lea-pilotfish.dtsi"
 
 / {
+	aliases {
+		rtc0 = &ext_rtc; /* Make the I2C RTC primary */
+		rtc1 = &rtc;     /* Make the internal RTC secondary */
+	};
+};
+
+/ {
 	model = "LEA Pilotfish";
 	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 };
@@ -241,7 +248,7 @@
     pinctrl-single,pins = <
       AM33XX_PADCONF(AM335X_PIN_GPMC_CLK, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_clk  GPMC_CLK  / GPIO2_1  (V12) */
       AM33XX_PADCONF(AM335X_PIN_GPMC_CSN3, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_cmd  GPMC_CSN3 / GPIO2_0  (T13) */
-      AM33XX_PADCONF(AM335X_PIN_GPMC_AD12, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat0 GPMC_AD12 / GPIO1_12 (T12) */
+      //AM33XX_PADCONF(AM335X_PIN_GPMC_AD12, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat0 GPMC_AD12 / GPIO1_12 (T12) */
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD13, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat1 GPMC_AD13 / GPIO1_13 (R12) */
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD14, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat2 GPMC_AD14 / GPIO1_14 (V13) */
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD15, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat3 GPMC_AD15 / GPIO1_15 (U13) */
@@ -339,6 +346,11 @@
 	pinctrl-0 = <&i2c1_pins>;
 	status = "okay";
 	clock-frequency = <100000>;
+	
+	ext_rtc: rtc@6f {
+		compatible = "microchip,mcp7940x";
+		reg = <0x6f>;
+	};
 };
 
 &i2c2 {
@@ -699,4 +711,13 @@
 	   ti,chan-step-opendelay= <20 20 20 20 20 20 20 20>;
 	   ti,chan-step-sampledelay = <27 27 27 27 27 27 27 27>;
   };
+};
+
+&usb0 {
+	dr_mode = "host";
+	status = "okay";
+};
+
+&usb0_phy {
+	status = "okay";
 };
