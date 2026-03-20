@@ -87,7 +87,7 @@
 &am33xx_pinmux {
 
 	pinctrl-names = "default";
-	pinctrl-0 = <&clkout2_pin>;
+	pinctrl-0 = <&clkout2_pin &tof_pins>;
 
 	clkout2_pin: pinmux_clkout2_pin {
 		pinctrl-single,pins = <
@@ -274,6 +274,13 @@
   wakeup_pins: pinmux_wakeup_pins {
     pinctrl-single,pins = <
       AM33XX_PADCONF(AM335X_PIN_LCD_DATA12, PIN_INPUT_PULLUP, MUX_MODE7) /* lcd_data12  / GPIO0_8  (V2) */
+    >;
+	};
+
+	tof_pins: pinmux_tof_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_RMII1_REF_CLK, PIN_INPUT_PULLUP, MUX_MODE7)  /* rmii1_ref_clk.gpio0_29 - ToF sensor interrupt */
+			AM33XX_PADCONF(AM335X_PIN_GPMC_WEN, PIN_OUTPUT_PULLDOWN, MUX_MODE7)    /* gpmc_wen.gpio2_4 - ToF XSHUT (active-low, pulled low at boot) */
     >;
 	};
 };
@@ -587,7 +594,7 @@
 		"P8_14",
 		"P8_17",
 		"[rmii1_txd0]",
-		"[rmii1_refclk]",
+		"[rmii1_refclk] [tof_irq]",
 		"P9_11 [uart4_rxd]",
 		"P9_13 [uart4_txd]";
 };
@@ -634,7 +641,7 @@
 		"P8_18",
 		"P8_7",
 		"P8_8",
-		"P8_10",
+		"[gpmc_wen] [tof_xshut]",
 		"P8_9",
 		"P8_45 [hdmi]",
 		"P8_46 [hdmi]",
