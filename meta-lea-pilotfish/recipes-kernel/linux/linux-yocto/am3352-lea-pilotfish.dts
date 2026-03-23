@@ -114,7 +114,9 @@
 	uart1_pins: pinmux_uart1_pins {
 		pinctrl-single,pins = <
 			AM33XX_IOPAD(AM335X_PIN_UART1_RXD, PIN_INPUT_PULLUP | MUX_MODE0)	/* uart1_rxd.uart1_rxd */
-			AM33XX_IOPAD(AM335X_PIN_UART1_TXD, PIN_OUTPUT_PULLDOWN | MUX_MODE0)	/* uart1_txd.uart1_txd */
+			AM33XX_IOPAD(AM335X_PIN_UART1_TXD, PIN_OUTPUT_PULLUP | MUX_MODE0)	/* uart1_txd.uart1_txd */
+			AM33XX_IOPAD(AM335X_PIN_UART1_CTSN, PIN_INPUT_PULLUP | MUX_MODE0)	/* uart1_ctsn.uart1_ctsn */
+			AM33XX_IOPAD(AM335X_PIN_UART1_RTSN, PIN_OUTPUT_PULLUP | MUX_MODE0)	/* uart1_rtsn.uart1_rtsn */
 		>;
 	};
 
@@ -157,12 +159,6 @@
 		>;
 	};
 
-	i2c2_pins: pinmux_i2c2_pins {
-		pinctrl-single,pins = <
-			AM33XX_PADCONF(AM335X_PIN_UART1_CTSN, PIN_INPUT_PULLUP, MUX_MODE3)	/* uart1_ctsn.i2c2_sda */
-			AM33XX_PADCONF(AM335X_PIN_UART1_RTSN, PIN_INPUT_PULLUP, MUX_MODE3)	/* uart1_rtsn.i2c2_scl */
-		>;
-	};
 
 	cpsw_default: cpsw_default {
 		pinctrl-single,pins = <
@@ -250,10 +246,15 @@
       AM33XX_PADCONF(AM335X_PIN_GPMC_CSN3, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_cmd  GPMC_CSN3 / GPIO2_0  (T13) */
       //AM33XX_PADCONF(AM335X_PIN_GPMC_AD12, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat0 GPMC_AD12 / GPIO1_12 (T12) */
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD13, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat1 GPMC_AD13 / GPIO1_13 (R12) */
-      AM33XX_PADCONF(AM335X_PIN_GPMC_AD14, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat2 GPMC_AD14 / GPIO1_14 (V13) */
       AM33XX_PADCONF(AM335X_PIN_GPMC_AD15, PIN_INPUT_PULLUP, MUX_MODE3) /* wifi_mmc2_dat3 GPMC_AD15 / GPIO1_15 (U13) */
       //AM33XX_PADCONF(AM335X_PIN_GPMC_A1, PIN_INPUT_PULLUP, MUX_MODE7) /* wifi_mmc2_/rst GPMC_A1   / GPIO1_17 (V14) */
       //AM33XX_PADCONF(AM335X_PIN_UART0_RTSN, PIN_INPUT_PULLUP, MUX_MODE7) /* 3.3V switched power supply enable UART0_RTS / GPIO1_9 */
+    >;
+  };
+
+  bt_pins: pinmux_bt_pins {
+    pinctrl-single,pins = <
+      AM33XX_PADCONF(AM335X_PIN_GPMC_AD14, PIN_OUTPUT_PULLDOWN, MUX_MODE7) /* gpmc_ad14.gpio1_14 - CYBT-343026-01 BT_REG_ON (active-high, pulled low at boot) */
     >;
   };
 
@@ -281,7 +282,7 @@
 		pinctrl-single,pins = <
 			AM33XX_PADCONF(AM335X_PIN_RMII1_REF_CLK, PIN_INPUT_PULLUP, MUX_MODE7)  /* rmii1_ref_clk.gpio0_29 - ToF sensor interrupt */
 			AM33XX_PADCONF(AM335X_PIN_GPMC_WEN, PIN_OUTPUT_PULLDOWN, MUX_MODE7)    /* gpmc_wen.gpio2_4 - ToF XSHUT (active-low, pulled low at boot) */
-    >;
+		>;
 	};
 };
 
@@ -293,8 +294,14 @@
 
 &uart1 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&uart1_pins>;
+	pinctrl-0 = <&uart1_pins &bt_pins>;
 	status = "okay";
+
+	bluetooth {
+		compatible = "brcm,bcm43438-bt";
+		max-speed = <115200>;
+		shutdown-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &uart5 {
@@ -361,10 +368,8 @@
 };
 
 &i2c2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c2_pins>;
-	status = "okay";
-	clock-frequency = <100000>;
+	/* uart1_ctsn/rtsn pins are used for CYBT-343026-01 UART1 flow control; i2c2 is unavailable */
+	status = "disabled";
 };
 
 /include/ "tps65217.dtsi"
