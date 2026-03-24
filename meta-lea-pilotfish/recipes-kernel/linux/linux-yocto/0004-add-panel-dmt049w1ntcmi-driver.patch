@@ -1,0 +1,22 @@
+From 3a6676ca62cc3ca999d40ba0b94797e14954cf26 Mon Sep 17 00:00:00 2001
+From: mariawerba <mariawerba@gmail.com>
+Date: Mon, 23 Mar 2026 21:54:33 -0400
+Subject: [PATCH] add panel-dmt049w1ntcmi driver
+
+Upstream-Status: Pending
+---
+ drivers/gpu/drm/panel/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
+index 2ba560bca61d..3acb6e695a59 100644
+--- a/drivers/gpu/drm/panel/Makefile
++++ b/drivers/gpu/drm/panel/Makefile
+@@ -53,3 +53,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += panel-tpo-tpg110.o
+ obj-$(CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA) += panel-truly-nt35597.o
+ obj-$(CONFIG_DRM_PANEL_VISIONOX_RM69299) += panel-visionox-rm69299.o
+ obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
++obj-y += panel-dmt049w1ntcmi.o
+-- 
+2.34.1
+

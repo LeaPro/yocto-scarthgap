@@ -4,6 +4,7 @@
  */
 /dts-v1/;
 
+#include <dt-bindings/interrupt-controller/irq.h>
 #include "am33xx-lea-pilotfish.dtsi"
 
 / {
@@ -63,18 +64,7 @@
 	};
 
 /* enable GPIO0[8] as active-high wakeup (note: wakeup not supported for normal gpios) */
-  gpio_keys {
-    compatible = "gpio-keys";
-    status = "okay";
-    pinctrl-names = "default";
-    pinctrl-0 = <&wakeup_pins>;
-    wp1 {
-      label = "WAKEUP";
-      gpios = <&gpio0 8 0>;
-      linux,code = <52>; /* '.' */
-      wakeup-source;
-    };
-  };
+  /* gpio_keys removed - LCD_DATA12 / GPIO0_8 reclaimed for LCDC */
 
 	vmmcsd_fixed: fixedregulator0 {
 		compatible = "regulator-fixed";
@@ -120,12 +110,7 @@
 		>;
 	};
 
-	uart5_pins: pinmux_uart5_pins {
-		pinctrl-single,pins = <
-			AM33XX_IOPAD(AM335X_PIN_LCD_DATA9, PIN_INPUT_PULLUP | MUX_MODE4)	/* uart5_rxd */
-			AM33XX_IOPAD(AM335X_PIN_LCD_DATA8, PIN_OUTPUT_PULLDOWN | MUX_MODE4)	/* uart5_txd */
-		>;
-	};
+	/* uart5 not used - LCD_DATA8/9 claimed by LCDC */
 
   spi0_pins: pinmux_spi0_pins {
     pinctrl-single,pins = <
@@ -138,10 +123,25 @@
 
 	spi1_pins: pinmux_spi1_pins {
 		pinctrl-single,pins = <
-			AM33XX_PADCONF(AM335X_PIN_MCASP0_ACLKX, PIN_INPUT_PULLUP, MUX_MODE3)	/* P9_31 spi1 sclk (this is a quirk - sclk is actually an output, but pinmux must be programmed as an input for it to work! */
-			AM33XX_PADCONF(AM335X_PIN_MCASP0_FSX, PIN_INPUT_PULLUP, MUX_MODE3)	  /* P9_29 spi1 d0 */
-			AM33XX_PADCONF(AM335X_PIN_MCASP0_AXR0, PIN_OUTPUT_PULLDOWN, MUX_MODE3)	/* P9_30 spi1 d1 */
-			AM33XX_PADCONF(AM335X_PIN_MCASP0_AHCLKR, PIN_OUTPUT_PULLDOWN, MUX_MODE3)	/* P9_28 spi1 cs0 */
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_ACLKX,  PIN_INPUT_PULLUP,    MUX_MODE3)	/* mcasp0_aclkx.spi1_sclk */
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_FSX,    PIN_OUTPUT_PULLDOWN, MUX_MODE3)	/* mcasp0_fsx.spi1_d0 - TFT_SDA (MOSI, ti,pindir-d0-out-d1-in) */
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_AXR0,   PIN_INPUT_PULLDOWN,  MUX_MODE3)	/* mcasp0_axr0.spi1_d1 - unused MISO */
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_AHCLKR, PIN_OUTPUT_PULLUP,   MUX_MODE3)	/* mcasp0_ahclkr.spi1_cs0 - TFT LCD init SPI */
+		>;
+	};
+
+	lcd_pins: pinmux_lcd_pins {
+		pinctrl-single,pins = <
+			/* LCD panel reset - active low */
+			AM33XX_PADCONF(AM335X_PIN_GPMC_A11, PIN_OUTPUT_PULLUP, MUX_MODE7)	/* gpmc_a11.gpio1_27 - LCD_RSTn */
+			/* LCD panel sleep - active high (TFT_SLEEP) */
+			AM33XX_PADCONF(AM335X_PIN_GPMC_A1, PIN_OUTPUT_PULLUP, MUX_MODE7)	/* gpmc_a1.gpio1_17 - TFT_SLEEP */
+			/* CTP touch controller reset - active low */
+			AM33XX_PADCONF(AM335X_PIN_GPMC_AD12, PIN_OUTPUT_PULLUP, MUX_MODE7)	/* gpmc_ad12.gpio1_12 - CTP_RST */
+			/* CTP touch interrupt - active low, connected to XDMA_EVENT_INTR0 */
+			AM33XX_PADCONF(AM335X_PIN_XDMA_EVENT_INTR0, PIN_INPUT_PULLUP, MUX_MODE7)	/* xdma_event_intr0.gpio0_19 - CTP_INT */
+			/* 20V backlight enable - active high */
+			AM33XX_PADCONF(AM335X_PIN_GPMC_AD10, PIN_OUTPUT_PULLDOWN, MUX_MODE7)	/* gpmc_ad10.gpio0_26 - BL_EN_20V */
 		>;
 	};
 
@@ -271,17 +271,40 @@
 		>;
 	};
 
-	/* enable GPIO0[8] as active-high wakeup (must be a gpio-key in order to do this) */
-  wakeup_pins: pinmux_wakeup_pins {
-    pinctrl-single,pins = <
-      AM33XX_PADCONF(AM335X_PIN_LCD_DATA12, PIN_INPUT_PULLUP, MUX_MODE7) /* lcd_data12  / GPIO0_8  (V2) */
-    >;
-	};
+	/* gpio0_8 / LCD_DATA12 reclaimed by LCDC - wakeup key removed */
 
 	tof_pins: pinmux_tof_pins {
 		pinctrl-single,pins = <
 			AM33XX_PADCONF(AM335X_PIN_RMII1_REF_CLK, PIN_INPUT_PULLUP, MUX_MODE7)  /* rmii1_ref_clk.gpio0_29 - ToF sensor interrupt */
 			AM33XX_PADCONF(AM335X_PIN_GPMC_WEN, PIN_OUTPUT_PULLDOWN, MUX_MODE7)    /* gpmc_wen.gpio2_4 - ToF XSHUT (active-low, pulled low at boot) */
+		>;
+	};
+
+	/* DMT049W1NTCMI-1A parallel RGB bus (16-bit RGB565).
+	 * All 16 data lines available - UART5 disabled, wakeup key removed. */
+	lcdc_pins: pinmux_lcdc_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA0,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data0 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA1,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data1 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA2,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data2 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA3,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data3 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA4,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data4 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA5,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data5 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA6,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data6 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA7,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data7 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA8,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data8  (was UART5 TXD) */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA9,  PIN_OUTPUT, MUX_MODE0)	/* lcd_data9  (was UART5 RXD) */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA10, PIN_OUTPUT, MUX_MODE0)	/* lcd_data10 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA11, PIN_OUTPUT, MUX_MODE0)	/* lcd_data11 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA12, PIN_OUTPUT, MUX_MODE0)	/* lcd_data12 (was wakeup GPIO0_8) */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA13, PIN_OUTPUT, MUX_MODE0)	/* lcd_data13 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA14, PIN_OUTPUT, MUX_MODE0)	/* lcd_data14 */
+			AM33XX_PADCONF(AM335X_PIN_LCD_DATA15, PIN_OUTPUT, MUX_MODE0)	/* lcd_data15 */
+			/* Control signals */
+			AM33XX_PADCONF(AM335X_PIN_LCD_VSYNC,      PIN_OUTPUT, MUX_MODE0)	/* lcd_vsync */
+			AM33XX_PADCONF(AM335X_PIN_LCD_HSYNC,      PIN_OUTPUT, MUX_MODE0)	/* lcd_hsync */
+			AM33XX_PADCONF(AM335X_PIN_LCD_PCLK,       PIN_OUTPUT, MUX_MODE0)	/* lcd_pclk */
+			AM33XX_PADCONF(AM335X_PIN_LCD_AC_BIAS_EN, PIN_OUTPUT, MUX_MODE0)	/* lcd_ac_bias_en / DE */
 		>;
 	};
 };
@@ -305,9 +328,8 @@
 };
 
 &uart5 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart5_pins>;
-	status = "okay";
+	/* UART5 disabled - LCD_DATA8/9 reclaimed for LCDC */
+	status = "disabled";
 };
 
 &spi0 { 
@@ -330,18 +352,33 @@
 &spi1 {
     status = "okay";
     pinctrl-names = "default";
-    pinctrl-0 = <&spi1_pins>;
-    cs-gpios = <0>, <&gpio3 19 GPIO_ACTIVE_LOW>;
-    num-chipselects = <2>;
-    spi-dsp0@0 {
-        spi-max-frequency = <24000000>;
+    pinctrl-0 = <&spi1_pins &lcd_pins>;
+    /* cs0: MCASP0_AHCLKR / gpio3_17 - TFT LCD SPI init (only device on SPI1) */
+    cs-gpios = <&gpio3 17 GPIO_ACTIVE_LOW>;
+    num-chipselects = <1>;
+    /* TFT_SDA is wired to SPI1_D0 (MISO pin), not SPI1_D1 (MOSI pin).
+     * This property swaps the D0/D1 directions so D0 becomes the output. */
+    ti,pindir-d0-out-d1-in;
+
+    /* DMT049W1NTCMI-1A LCD SPI init interface (Sitronix ST7102 TDDI)
+     * SPI Mode 3 (CPOL=1, CPHA=1), write-only, used only for panel init sequence.
+     * Pixel data is delivered over the RGB parallel (LCDC) bus.
+     * Bound to panel-dmt049w1ntcmi kernel driver which fires init in .prepare().
+     * tilcdc connects directly to this panel via the port/endpoint graph. */
+    lcd_panel: spi-lcd@0 {
+        compatible = "densitron,dmt049w1ntcmi";
         reg = <0>;
-        compatible = "linux,spidev";
-    };
-    spi-dsp1@1 {
-        spi-max-frequency = <24000000>;
-        reg = <1>;
-        compatible = "linux,spidev";
+        spi-max-frequency = <1000000>; /* conservative debug value; LCD SPI max not confirmed from datasheet */
+        spi-cpol;
+        spi-cpha;
+        /* LCD hard reset: GPMC_A11 / gpio1_27, active-low */
+        reset-gpios = <&gpio1 27 GPIO_ACTIVE_LOW>;
+        backlight = <&backlight>;
+        port {
+            lcd_panel_out: endpoint {
+                remote-endpoint = <&lcdc_out>;
+            };
+        };
     };
 };
 
@@ -360,10 +397,25 @@
 	pinctrl-0 = <&i2c1_pins>;
 	status = "okay";
 	clock-frequency = <100000>;
-	
+
 	ext_rtc: rtc@6f {
 		compatible = "microchip,mcp7940x";
 		reg = <0x6f>;
+	};
+
+	/* Sitronix ST7102 TDDI capacitive touch controller
+	 * Part of the Densitron DMT049W1NTCMI-1A display module.
+	 * I2C address: 0x55 (7-bit) = 0xAA write / 0xAB read (8-bit per datasheet)
+	 * IRQ:   XDMA_EVENT_INTR0 / gpio0_19
+	 * Reset: GPMC_AD12        / gpio1_12 */
+	sitronix_ts: sitronix@55 {
+		compatible = "sitronix_ts";
+		reg = <0x55>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <19 IRQ_TYPE_EDGE_FALLING>;
+		irq-gpio = <&gpio0 19 GPIO_ACTIVE_LOW>;
+		rst-gpio = <&gpio1 12 GPIO_ACTIVE_LOW>;
+		status = "okay";
 	};
 };
 
@@ -578,10 +630,10 @@
 		"P9_17 [spi0_cs0]",
 		"[mmc0_cd]",
 		"P8_42A [ecappwm0]",
-		"P8_35 [lcd d12]",
-		"P8_33 [lcd d13]",
-		"P8_31 [lcd d14]",
-		"P8_32 [lcd d15]",
+		"[lcd_data12]",
+		"[lcd_data13]",
+		"[lcd_data14]",
+		"[lcd_data15]",
 		"P9_20 [i2c2_sda]",
 		"P9_19 [i2c2_scl]",
 		"P9_26 [uart1_rxd]",
@@ -594,9 +646,9 @@
 		"[rmii1_txd1]",
 		"P8_19 [ehrpwm2a]",
 		"P8_13 [ehrpwm2b]",
+		"[ctp_int]",
 		"NC",
-		"NC",
-		"P8_14",
+		"[bl_en_20v]",
 		"P8_17",
 		"[rmii1_txd0]",
 		"[rmii1_refclk] [tof_irq]",
@@ -618,7 +670,7 @@
 		"NC",
 		"NC",
 		"NC",
-		"P8_12",
+		"[ctp_rst]",
 		"P8_11",
 		"P8_16",
 		"P8_15",
@@ -633,11 +685,20 @@
 		"[usr3 led]",
 		"[hdmi irq]",
 		"[usb vbus oc]",
-		"[hdmi audio]",
+		"[lcd_rstn]",
 		"P9_12",
 		"P8_26",
 		"P8_21 [emmc]",
 		"P8_20 [emmc]";
+
+	tft-sleep-hog {
+		gpio-hog;
+		/* TFT_SLEEP is active-low: pin HIGH = display awake, pin LOW = display sleeping.
+		 * GPIO_ACTIVE_LOW + output-low = logically deasserted = pin physically HIGH = awake. */
+		gpios = <17 GPIO_ACTIVE_LOW>;
+		output-low;
+		line-name = "tft-sleep";
+	};
 };
 
 &gpio2 {
@@ -695,8 +756,8 @@
 		"P9_31 [spi1_sclk]",
 		"P9_29 [spi1_d0]",
 		"P9_30 [spi1_d1]",
-		"P9_28 [spi1_cs0]",
-		"P9_42B [ecappwm0]",
+		"[spi1_cs0_lcd]",
+		"NC",
 		"P9_27",
 		"P9_41A",
 		"P9_25",
@@ -732,4 +793,79 @@
 
 &usb0_phy {
 	status = "okay";
+};
+
+/* -----------------------------------------------------------------------
+ * Densitron DMT049W1NTCMI-1A  4.9" 480x854 RGB display
+ *   - Pixel data:  AM3352 LCDC (tilcdc) parallel RGB interface
+ *   - Init cmds:   panel-dmt049w1ntcmi SPI driver on SPI1 cs0
+ *                  (MCASP0_AHCLKR / gpio3_17), Mode 3, 8 MHz
+ *                  Driver calls SPI init sequence in drm_panel.prepare()
+ *                  before LCDC starts clocking pixels.
+ *   - Touch (CTP): I2C1 @ 0x55 (Sitronix ST7102 TDDI, 7-bit; 0xAA/0xAB in datasheet)
+ *   - LCD reset:   GPMC_A11  / gpio1_27  (active-low, owned by SPI driver node)
+ *   - CTP reset:   GPMC_AD12 / gpio1_12  (active-low)
+ *   - CTP IRQ:     XDMA_EVENT_INTR0 / gpio0_19 (falling edge)
+ *   - BL enable:   GPMC_AD10 / gpio0_26  (active-high, gpio-backlight)
+ *
+ * tilcdc connects directly to the panel-dmt049w1ntcmi SPI driver panel
+ * via the port/endpoint graph (no intermediate panel-dpi node needed).
+ * The SPI driver's get_modes() provides the display timings.
+ * ----------------------------------------------------------------------- */
+/ {
+	backlight: backlight {
+		compatible = "gpio-backlight";
+		/* 20V boost enable: GPMC_AD10 / gpio0_26, active-high */
+		gpios = <&gpio0 26 GPIO_ACTIVE_HIGH>;
+		default-on;
+		status = "okay";
+	};
+};
+
+&lcdc {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&lcdc_pins>;
+	port {
+		lcdc_out: endpoint {
+			remote-endpoint = <&lcd_panel_out>;
+		};
+	};
+};
+
+/* -----------------------------------------------------------------------
+ * Override BBB upstream DT nodes that conflict with the Pilotfish LCD.
+ *
+ * am335x-boneblack-common.dtsi (pulled in via compatible="ti,am335x-bone-black")
+ * declares:
+ *   - mcasp0: audio codec connected to LCDC via tda19988 HDMI TX
+ *   - clk_mcasp0: gpio-gate-clock using gpio1_27 (GPMC_A11) as enable
+ *   - tda19988 i2c node: HDMI transmitter using the LCDC port
+ *
+ * On Pilotfish, GPMC_A11/gpio1_27 is the LCD panel hard-reset (LCD_RSTn),
+ * and the LCDC is connected directly to the DMT049W1NTCMI-1A RGB panel -
+ * not to an HDMI transmitter.  We must free gpio1_27 and disconnect the
+ * upstream HDMI audio wiring so the panel driver can own the reset GPIO.
+ * ----------------------------------------------------------------------- */
+
+/* Disable McASP0 - not used, and its pinmux claims GPMC_A11/gpio1_27 */
+&mcasp0 {
+	status = "disabled";
+};
+
+/* Disable the TDA19988 HDMI transmitter - not present on Pilotfish */
+&i2c0 {
+	tda19988: tda19988@70 {
+		status = "disabled";
+	};
+};
+
+/* Remove the gpio-gate-clock that grabs gpio1_27 (GPMC_A11 = LCD_RSTn).
+ * The clk_mcasp0 node lives in root '/' from am335x-boneblack-common.dtsi.
+ * We cannot /delete-node/ a node defined in an included DTSI by label from
+ * a peer DTS file, so instead strip the enable-gpios property so the clock
+ * driver never requests the GPIO.  The node itself becomes a fixed pass-through. */
+/ {
+	/delete-node/ clk_mcasp0;
+	/delete-node/ sound;
 };
