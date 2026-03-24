@@ -226,9 +226,9 @@ static const struct dmt_cmd dmt_init_sequence[] = {
 
 	CMD(0x35), DATA(0x00), /* Tearing Effect Line On */
 
-	/* BIST: fills screen with internal colour bars to confirm SPI init is working.
-	 * TODO: remove once SPI init is confirmed - this blocks RGB pixel input from tilcdc. */
-	CMD(0xB5), DATA(0x85),
+	/* BIST: fills screen with internal colour bars, independent of RGB input.
+	 * Uncomment to verify SPI init is reaching the panel (blocks tilcdc pixel data). */
+	// CMD(0xB5), DATA(0x85),
 };
 
 /* -----------------------------------------------------------------------

@@ -368,7 +368,7 @@
     lcd_panel: spi-lcd@0 {
         compatible = "densitron,dmt049w1ntcmi";
         reg = <0>;
-        spi-max-frequency = <1000000>; /* conservative debug value; LCD SPI max not confirmed from datasheet */
+        spi-max-frequency = <8000000>;
         spi-cpol;
         spi-cpha;
         /* LCD hard reset: GPMC_A11 / gpio1_27, active-low */
