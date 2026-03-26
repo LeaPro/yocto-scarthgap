@@ -1,4 +1,4 @@
-From e74ce39be3c05030bef9b8501d1eafeebbc84533 Mon Sep 17 00:00:00 2001
+From 8403c796c1c765bf5426d330e25740f70967f918 Mon Sep 17 00:00:00 2001
 From: mariawerba <mariawerba@gmail.com>
 Date: Tue, 24 Mar 2026 00:00:00 -0400
 Subject: [PATCH] add Sitronix ST7102 TDDI touchscreen driver
@@ -12,7 +12,7 @@ used on the Densitron DMT049W1NTCMI-1A display module.
  drivers/input/touchscreen/Makefile            |    2 +
  .../input/touchscreen/sitronix_ts/Makefile    |    5 +
  .../touchscreen/sitronix_ts/sitronix_st7123.h |   77 +
- .../touchscreen/sitronix_ts/sitronix_ts.c     | 1762 +++++
+ .../touchscreen/sitronix_ts/sitronix_ts.c     | 1763 +++++
  .../touchscreen/sitronix_ts/sitronix_ts.h     |  664 ++
  .../touchscreen/sitronix_ts/sitronix_ts_i2c.c |  676 ++
  .../touchscreen/sitronix_ts/sitronix_ts_mt.c  |  391 +
@@ -30,7 +30,7 @@ used on the Densitron DMT049W1NTCMI-1A display module.
  .../sitronix_ts/sitronix_ts_upgrade.h         | 4291 ++++++++++
  .../sitronix_ts/sitronix_ts_upgrade_id1.h     | 4264 ++++++++++
  .../sitronix_ts/sitronix_ts_utility.c         | 2153 +++++
- 22 files changed, 50669 insertions(+)
+ 22 files changed, 50670 insertions(+)
  create mode 100644 drivers/input/touchscreen/sitronix_ts/Makefile
  create mode 100644 drivers/input/touchscreen/sitronix_ts/sitronix_st7123.h
  create mode 100644 drivers/input/touchscreen/sitronix_ts/sitronix_ts.c
@@ -176,10 +176,10 @@ index 000000000000..4f98f9f515b7
 +} ST_MODE_GRIP_ROTATE_VALUE;
 diff --git a/drivers/input/touchscreen/sitronix_ts/sitronix_ts.c b/drivers/input/touchscreen/sitronix_ts/sitronix_ts.c
 new file mode 100644
-index 000000000000..514f883209d8
+index 000000000000..632b6e61fe05
 --- /dev/null
 +++ b/drivers/input/touchscreen/sitronix_ts/sitronix_ts.c
-@@ -0,0 +1,1762 @@
+@@ -0,0 +1,1763 @@
 +/*
 + * Sitronix Touchscreen Controller Driver
 + *
@@ -1314,7 +1314,8 @@ index 000000000000..514f883209d8
 +	sitronix_sysfs_remove_device(&pdev->dev);
 +# else
 +#  ifndef SITRONIX_PLATFORM_MTK_TDP
-+	if (fb_unregister_client(&ts_data->fb_notif))
++	if (ts_data->fb_notif.notifier_call &&
++	    fb_unregister_client(&ts_data->fb_notif))
 +		sterr("Error occurred while unregistering fb_notifier.\n");
 +#  endif //#ifndef SITRONIX_PLATFORM_MTK_TDP
 +# endif
