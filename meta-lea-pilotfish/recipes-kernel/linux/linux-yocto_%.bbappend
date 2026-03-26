@@ -24,6 +24,7 @@ SRC_URI += "file://devtool-fragment.cfg \
             file://0002-spidev-tweaks-5.10.patch \
             file://0003-added-WILC-15.7-driver-from-yocto-kirkstone.patch \
             file://0004-add-panel-dmt049w1ntcmi-driver.patch \
+            file://0005-add-sitronix-ts-driver.patch \
             file://am33xx-lea-pilotfish.dtsi;subdir=git/arch/arm/boot/dts \
             file://am3352-lea-pilotfish.dts;subdir=git/arch/arm/boot/dts \
             file://panel-dmt049w1ntcmi.c;subdir=git/drivers/gpu/drm/panel \
