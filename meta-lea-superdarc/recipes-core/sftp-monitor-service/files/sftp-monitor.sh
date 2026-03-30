@@ -19,35 +19,6 @@ while [ 1 = 1 ] ; do
     echo "dir is $DIR, op is $OP, file is $FILE"
     /bin/sleep 1s
     pushd $DIR
-    # Get the amp hardware revision from kvs for use in the compatibility test
-    REVERSE_COMPATIBLE_HW=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["reverseCompatibleHw"]' | jq -r '.result.reverseCompatibleHw')
-    AMP_HW_REV=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["hardwareID"]' | jq -r '.result.hardwareID')
-    if [[ $REVERSE_COMPATIBLE_HW == "false" ]]; then
-        echo "Verify $FILE firmware supports hwRev [${AMP_HW_REV}]..."
-        # Minimum firmware version needed for adcUpdate hw, older fw doesn't know about new hw changes.
-        MIN_REQUIRED_VERSION="4.2.0"
-        # Extract version from filename using regex
-        if [[ $FILE =~ ([0-9]+-[0-9]+-[0-9]+-[0-9]+) ]]; then
-            FILE_VERSION="${BASH_REMATCH[1]//-/.}"
-            # check if FILE_VERSION is at least MIN_REQUIRED_VERSION
-            if [ "$(printf '%s\n%s' "$MIN_REQUIRED_VERSION" "$FILE_VERSION" | sort -V | head -n1)" == "$MIN_REQUIRED_VERSION" ]; then
-                echo "Yes! $FILE_VERSION passed version check (>= $MIN_REQUIRED_VERSION)."
-                # Proceed with the update
-            else
-                echo "No! $FILE_VERSION is older than $MIN_REQUIRED_VERSION. Deleting."
-                ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"HwNotSupportedInFw"}' || true
-                rm $FILE
-                sleep 5
-                exit 1
-            fi
-        else
-            echo "filename is invalid $FILE, can't be evaluated"
-            rm $FILE
-            exit 1
-        fi
-    else
-        echo "The detected hwRev [${AMP_HW_REV}] supports all versions of firmware."
-    fi
     # f/w updates require a tar.xz archive encrypted with openssl
     if [[ $FILE == *tar.xz.enc ]] ; then
       TARBALL=${FILE%.*}
@@ -56,6 +27,35 @@ while [ 1 = 1 ] ; do
       openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k SDBS
       # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k SDBS
       if [[ $? = 0 ]] ; then
+        # Get the amp hardware revision from kvs for use in the compatibility test
+        REVERSE_COMPATIBLE_HW=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["reverseCompatibleHw"]' | jq -r '.result.reverseCompatibleHw')
+        AMP_HW_REV=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["hardwareID"]' | jq -r '.result.hardwareID')
+        if [[ $REVERSE_COMPATIBLE_HW == "false" ]]; then
+            echo "Verify $FILE firmware supports hwRev [${AMP_HW_REV}]..."
+            # Minimum firmware version needed for adcUpdate hw, older fw doesn't know about new hw changes.
+            MIN_REQUIRED_VERSION="4.2.0"
+            # Extract version from filename using regex
+            if [[ $FILE =~ ([0-9]+-[0-9]+-[0-9]+-[0-9]+) ]]; then
+                FILE_VERSION="${BASH_REMATCH[1]//-/.}"
+                # check if FILE_VERSION is at least MIN_REQUIRED_VERSION
+                if [ "$(printf '%s\n%s' "$MIN_REQUIRED_VERSION" "$FILE_VERSION" | sort -V | head -n1)" == "$MIN_REQUIRED_VERSION" ]; then
+                    echo "Yes! $FILE_VERSION passed version check (>= $MIN_REQUIRED_VERSION)."
+                    # Proceed with the update
+                else
+                    echo "No! $FILE_VERSION is older than $MIN_REQUIRED_VERSION. Deleting."
+                    ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"HwNotSupportedInFw"}' || true
+                    rm $FILE
+                    sleep 5
+                    exit 1
+                fi
+            else
+                echo "filename is invalid $FILE, can't be evaluated"
+                rm $FILE
+                exit 1
+            fi
+        else
+            echo "The detected hwRev [${AMP_HW_REV}] supports all versions of firmware."
+        fi
         rm $FILE
         # format eMMC if we're not running from it
         mount | grep -e "mmcblk1.* on /"
