@@ -37,6 +37,9 @@ do_install() {
     # WILC1000 firmware (using version 15.7 from https://github.com/linux4wilc/firmware)
     install -d ${D}/usr/lib/firmware/mchp
     install -m 0755 ${S}/wilc1000_wifi_firmware.bin ${D}/usr/lib/firmware/mchp/
+    # run sshEnable.sh at boot via rc.local
+    install -d ${D}/etc
+    install -m 0755 ${S}/rc.local ${D}/etc/rc.local
 }
 
 

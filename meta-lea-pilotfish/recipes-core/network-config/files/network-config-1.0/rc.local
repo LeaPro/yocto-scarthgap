@@ -1,0 +1,3 @@
+#!/bin/sh
+/etc/systemd/network/sshEnable.sh
+exit 0
