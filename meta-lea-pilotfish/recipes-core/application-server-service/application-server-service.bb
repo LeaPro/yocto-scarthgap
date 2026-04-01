@@ -2,7 +2,7 @@ SUMMARY = "Pilotfish application server"
 DESCRIPTION = "Service that runs the Pilotfish application server"
 LICENSE = "CLOSED"
 DEPENDS = "boost lmdb openssl curl"
-RDEPENDS:${PN} = "libudev"
+RDEPENDS:${PN} = "libudev libdrm"
 PR = "r1"
 
 SRC_URI =  " \

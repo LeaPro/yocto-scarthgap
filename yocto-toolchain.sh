@@ -42,6 +42,7 @@ declare -a arr=("../u-boot"
                 "../WebsocketAPI/ipcTool"
                 "../WebsocketAPI/kvsTool"
                 "../WebsocketAPI/stm32flash"
+                "../lv_port_linux"
                 )
 for i in "${arr[@]}"
 do
