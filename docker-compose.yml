@@ -1,0 +1,32 @@
+services:
+  yocto:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.yocto
+      args:
+        USER: ${USER}
+        host_uid: ${UID}
+        host_gid: ${GID}
+    image: lea-yocto-scarthgap-yocto
+    tty: true
+    stdin_open: true
+    volumes:
+      - ${HOME}:${HOME}
+      - /media/wap/HDD/yocto-scarthgap-shared/downloads:/media/wap/HDD/yocto-scarthgap-shared/downloads
+      - /media/wap/HDD/yocto-scarthgap-shared/sstate-cache:/media/wap/HDD/yocto-scarthgap-shared/sstate-cache
+
+  adi-tools:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+      args:
+        USER: ${USER}
+        host_uid: ${UID}
+        host_gid: ${GID}
+    image: lea-yocto-scarthgap-adi
+    tty: true
+    stdin_open: true
+    volumes:
+      - ${HOME}:${HOME}
+      - /media/wap/HDD/yocto-scarthgap-shared/downloads:/media/wap/HDD/yocto-scarthgap-shared/downloads
+      - /media/wap/HDD/yocto-scarthgap-shared/sstate-cache:/media/wap/HDD/yocto-scarthgap-shared/sstate-cache

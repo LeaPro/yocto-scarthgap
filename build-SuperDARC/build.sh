@@ -12,15 +12,15 @@ set -e # exit on error
 
 ../yocto-toolchain.sh SuperDARC
 
-./build-dsp.sh
+#./build-dsp.sh
 
-./build-stm32-firmware.sh
+#./build-stm32-firmware.sh
 
-make $REBUILD_FLAG -f application-server-service.mk
+# make $REBUILD_FLAG -f application-server-service.mk
 
-make $REBUILD_FLAG -f cloud-proxy-service.mk
+# make $REBUILD_FLAG -f cloud-proxy-service.mk
 
-make $REBUILD_FLAG -f leatcp-proxy-service.mk
+# make $REBUILD_FLAG -f leatcp-proxy-service.mk
 
 ./build-uboot.sh
 

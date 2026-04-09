@@ -1,6 +1,6 @@
 # this Dockerfile creates an image that works on linux mint 22.1 (ubuntu 24.04 based)
 #
-# docker build --tag "lea-yocto-scarthgap" --build-arg "USER=$(whoami)" --build-arg "host_uid=$(id -u)" --build-arg "host_gid=$(id -g) ."
+# docker build --tag "lea-yocto-scarthgap" --build-arg "USER=$(whoami)" --build-arg "host_uid=$(id -u)" --build-arg "host_gid=$(id -g)" .
 #
 # run with a variation of the following command (note mac-address for ADI CCES license and yocto downloads/sstate-cache symlink mapping)
 # docker run --rm --mac-address="a4:4c:c8:29:84:c4" -it -v $HOME:$HOME -v /media/wap/HDD/yocto-scarthgap-shared/downloads:/media/wap/HDD/yocto-scarthgap-shared/downloads -v /media/wap/HDD/yocto-scarthgap-shared/sstate-cache:/media/wap/HDD/yocto-scarthgap-shared/sstate-cache lea-yocto-scarthgap
@@ -21,6 +21,7 @@ RUN apt install -y gawk wget git-core diffstat zip unzip texinfo \
 
 RUN pip3 install numpy
 RUN pip3 install websockets
+RUN pip3 install pyelftools
     
 # Set up locales
 RUN locale-gen en_US.UTF-8 && \
