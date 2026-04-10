@@ -2,7 +2,6 @@
 # 2 - clean sftp directory
 # 3 - continously monitor SFTP directory for firmware update archive
 #     when found:
-#      - check for compatibility with the hw
 #      - decrypt/extract archive into eMMC a/b partition
 #      - toggle eMMC a/b partition
 #      - reboot
@@ -28,6 +27,15 @@ while [ 1 = 1 ] ; do
       openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k DLS!
       # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k DLS!
       if [[ $? = 0 ]] ; then
+        # Block firmware updates when running on PoE
+        POWER_SOURCE=""
+        POWER_SOURCE=$(ipcTool --port=1236 --url=/amp/powerSupply --method=get --params='["powerSource"]' | jq -r '.result.powerSource')
+        if [[ $POWER_SOURCE == "POE" ]]; then
+          echo "Firmware update is not allowed when running on PoE. Deleting $FILE."
+          rm $FILE
+          sleep 5
+          exit 1
+        fi
         # Get the amp hardware revision from kvs for use in the compatibility test
         REVERSE_COMPATIBLE_HW=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["reverseCompatibleHw"]' | jq -r '.result.reverseCompatibleHw')
         AMP_HW_REV=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["ampHardwareRevision"]' | jq -r '.result.ampHardwareRevision')
