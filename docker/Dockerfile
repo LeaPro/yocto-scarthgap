@@ -54,6 +54,8 @@ RUN cd /opt && \
     dpkg -i adi-CrossCoreEmbeddedStudio-linux-x86-2.10.1.deb && \
     unzip com.analog.crosscore.incubation.blackfin_sharc_linux.stage_2.10.1.202202091957.jar support_files.tar.gz && \
     tar xvf support_files.tar.gz -C /opt/analog/cces/2.10.1
+RUN chmod -R 777 /opt/analog/cces/2.10.1/ARM/packs
+RUN ln -sf /usr/bin/rm /usr/bin/clean
 
 # install version Make-4.4.1 for .WAIT target needed for new fw update scheme
 COPY make-4.4.1.tar.gz /opt
