@@ -53,6 +53,7 @@ while [ 1 = 1 ] ; do
                 else
                     echo "No! $FILE_VERSION is older than $MIN_REQUIRED_VERSION. Deleting."
                     ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"HwNotSupportedInFw"}' || true
+                    touch /usr/sbin/HwNotSupportedInFw
                     rm $FILE
                     sleep 5
                     exit 1
