@@ -27,6 +27,15 @@ while [ 1 = 1 ] ; do
       openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k SSSS
       # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k SSSS
       if [[ $? = 0 ]] ; then
+        # Block firmware updates when running on PoE
+        POWER_SOURCE=""
+        POWER_SOURCE=$(ipcTool --port=1236 --url=/amp/powerSupply --method=get --params='["powerSource"]' | jq -r '.result.powerSource')
+        if [[ $POWER_SOURCE == "POE" ]]; then
+          echo "Firmware update is not allowed when running on PoE. Deleting $FILE."
+          rm $FILE
+          sleep 5
+          exit 1
+        fi
         # Get the amp hardware revision from kvs for use in the compatibility test
         REVERSE_COMPATIBLE_HW=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["reverseCompatibleHw"]' | jq -r '.result.reverseCompatibleHw')
         AMP_HW_REV=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["hardwareID"]' | jq -r '.result.hardwareID')
