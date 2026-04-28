@@ -102,3 +102,7 @@ build-*/sstate-cache/
 build-*/conf/templateconf.cfg
 build-*/conf/conf-notes.txt
 build-*/conf/conf-summary.txt
+
+meta-lea-remy/recipes-core/sftp-monitor-service/files/tiboot3.bin
+
+meta-lea-remy/recipes-core/sftp-monitor-service/files/tispl.bin

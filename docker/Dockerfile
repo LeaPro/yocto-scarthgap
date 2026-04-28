@@ -11,9 +11,8 @@ user root
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update
-RUN apt install -y gawk wget git-core diffstat zip unzip texinfo \
-    gcc-multilib build-essential chrpath socat file cpio python3 \
+RUN apt-get update && apt-get install -y gawk wget git-core diffstat zip unzip texinfo \
+    build-essential crossbuild-essential-arm64 crossbuild-essential-armhf chrpath socat file cpio python3 \
     python3-pip python3-pexpect xz-utils debianutils debconf-utils iputils-ping \
     libsdl1.2-dev xterm tar locales net-tools rsync sudo vim curl zstd \
     liblz4-tool libssl-dev bc lzop libgnutls28-dev efitools git-lfs \
@@ -22,6 +21,7 @@ RUN apt install -y gawk wget git-core diffstat zip unzip texinfo \
 RUN pip3 install numpy
 RUN pip3 install websockets
 RUN pip3 install pyelftools
+RUN pip3 install cryptography
     
 # Set up locales
 RUN locale-gen en_US.UTF-8 && \
@@ -77,8 +77,12 @@ RUN echo "${USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USER} && \
 # Set the arguments for host_id and user_id
 ARG host_uid \
     host_gid
-RUN groupadd -f -g $host_gid $USER && \ 
+RUN groupadd -f -g $host_gid $USER && \
     useradd -g $host_gid -m -s /bin/bash -u $host_uid $USER
+
+# Default runtime working directory (can be overridden by docker run --workdir)
+ARG WORKDIR
+WORKDIR ${WORKDIR}
 
 # Yocto builds should run as a normal user.
 USER $USER
