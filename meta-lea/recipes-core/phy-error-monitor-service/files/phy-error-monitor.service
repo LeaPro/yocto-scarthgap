@@ -1,0 +1,13 @@
+[Unit]
+Description=PHY error monitor
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c '/usr/sbin/phy-error-monitor.sh'
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+
