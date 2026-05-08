@@ -1,0 +1,155 @@
+From: LEA Engineering <engineering@lea.com>
+Date: Mon, 4 May 2026 00:00:00 +0000
+Subject: [PATCH] arm: dts: am335x: Add MAYA-W271 WiFi/BT device tree
+
+Add am335x-boneblack-maya.dts for BeagleBone Black with u-blox MAYA-W271 EVK.
+
+The MAYA-W271 EVK uses:
+  - SDIO interface connected to BBB microSD slot (mmc1)
+  - UART interface on BBB P9 header uart1 (4-wire with hardware flow control)
+
+The microSD physical slot is mmc1 on the AM335x. Plugging the MAYA-W271 EVK
+SD edge connector into that slot replaces SD card functionality with SDIO WiFi.
+
+Changes from standard am335x-boneblack.dts:
+  - mmc1: remove cd-gpios, add non-removable + cap-sdio-irq for SDIO WiFi
+  - i2c2: disabled (its SCL/SDA share uart1_rtsn/uart1_ctsn pads)
+  - uart1: enabled with 4-wire flow control pinmux for BT HCI UART
+  - Bluetooth child node on uart1 using nxp,88w8997-bt compatible
+    (binds to kernel btnxpuart serdev driver)
+
+Note: The IW612 WiFi function is enumerated by the SDIO bus automatically
+(vendor=0x02DF). The mwifiex_sdio driver binds via SDIO device ID without
+requiring a DT child node. The "marvell,sd8997" DT compatible is added as
+a hint for firmware selection.
+
+Signed-off-by: LEA Engineering <engineering@lea.com>
+---
+ arch/arm/boot/dts/ti/omap/Makefile                   |  1 +
+ arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts  | 104 +++++++++++++++++++
+ 2 files changed, 105 insertions(+)
+ create mode 100644 arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts
+
+
+
+diff --git a/arch/arm/boot/dts/ti/omap/Makefile b/arch/arm/boot/dts/ti/omap/Makefile
+index e6f16a963956..b59abf6dbd7c 100644
+--- a/arch/arm/boot/dts/ti/omap/Makefile
++++ b/arch/arm/boot/dts/ti/omap/Makefile
+@@ -95,6 +95,7 @@ dtb-$(CONFIG_SOC_AM33XX) += \
+ 	am335x-bone.dtb \
+ 	am335x-boneblack.dtb \
+ 	am335x-boneblack-revd.dtb \
++	am335x-boneblack-maya.dtb \
+ 	am335x-boneblack-uboot.dtb \
+ 	PB-MIKROBUS-1.dtbo \
+ 	PB-MIKROBUS-0.dtbo \
+diff --git a/arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts b/arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts
+new file mode 100644
+--- /dev/null
++++ b/arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts
+@@ -0,0 +1,104 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * BeagleBone Black with u-blox MAYA-W271 EVK
++ *
++ * MAYA-W271 EVK wiring:
++ *   WiFi: SD edge connector -> BBB microSD slot (mmc1, SDIO)
++ *   BT:   J4 pin 16 (MA_UART_TXD) -> P9.26 (UART1_RXD)
++ *         J4 pin 18 (MA_UART_RXD) -> P9.24 (UART1_TXD)
++ *         J4 pin 20 (MA_UART_RTS) -> P9.20 (UART1_CTS)
++ *         J4 pin 22 (MA_UART_CTS) -> P9.19 (UART1_RTS)
++ *
++ * WiFi firmware: mrvl/sdsd8997_combo_v4.bin  (mwifiex_sdio, sd8997 compat)
++ * BT  firmware: nxp/iw612/uartnw61x_v1.bin
++ *
++ * IMPORTANT: This DTS disables the microSD card slot.
++ *            For SD card access, boot with am335x-boneblack.dtb.
++ */
++/dts-v1/;
++
++#include "am33xx.dtsi"
++#include "am335x-bone-common.dtsi"
++#include "am335x-boneblack-common.dtsi"
++#include "am335x-boneblack-hdmi.dtsi"
++
++/ {
++	model = "TI AM335x BeagleBone Black + u-blox MAYA-W271";
++	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
++
++	chosen {
++		base_dtb = "am335x-boneblack-maya.dts";
++		base_dtb_timestamp = __TIMESTAMP__;
++	};
++};
++
++&am33xx_pinmux {
++	/*
++	 * uart1 4-wire pinmux for BT HCI UART.
++	 *
++	 * These pads are muxed as i2c2 in am335x-bone-common.dtsi.
++	 * We override them here to MUX_MODE0 (native uart1 function).
++	 * &i2c2 is disabled below to release those pads.
++	 */
++	uart1_maya_pins: uart1-maya-pins {
++		pinctrl-single,pins = <
++			/* P9.26 - uart1_rxd */
++			AM33XX_PADCONF(AM335X_PIN_UART1_RXD,  PIN_INPUT,           MUX_MODE0)
++			/* P9.24 - uart1_txd */
++			AM33XX_PADCONF(AM335X_PIN_UART1_TXD,  PIN_OUTPUT,          MUX_MODE0)
++			/* P9.20 - uart1_ctsn (module RTS drives our CTS) */
++			AM33XX_PADCONF(AM335X_PIN_UART1_CTSN, PIN_INPUT,           MUX_MODE0)
++			/* P9.19 - uart1_rtsn (our RTS drives module CTS) */
++			AM33XX_PADCONF(AM335X_PIN_UART1_RTSN, PIN_OUTPUT,          MUX_MODE0)
++		>;
++	};
++};
++
++/*
++ * i2c2 SCL/SDA share pads with uart1 RTSN/CTSN.
++ * Disable i2c2 so we can repurpose those pads for uart1 flow control.
++ */
++&i2c2 {
++	status = "disabled";
++};
++
++/*
++ * mmc1 = microSD slot physical connector.
++ * Override bone-common.dtsi mmc1 node: remove card-detect GPIO,
++ * add non-removable and SDIO interrupt support for MAYA-W271 WiFi.
++ *
++ * The mwifiex_sdio driver auto-binds via SDIO enumeration (vendor 0x02DF).
++ * The child node with "marvell,sd8997" compatible tells mwifiex which
++ * firmware file to load: mrvl/sdsd8997_combo_v4.bin
++ */
++&mmc1 {
++	status = "okay";
++	bus-width = <4>;
++	non-removable;
++	cap-sdio-irq;
++	keep-power-in-suspend;
++	no-1-8-v;
++	ti,needs-special-hs-handling;
++	max-frequency = <25000000>;
++	/delete-property/ cd-gpios;
++	pinctrl-names = "default";
++	pinctrl-0 = <&mmc1_pins>;
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlan: wlan@1 {
++		compatible = "marvell,sd8997";
++		reg = <1>;
++	};
++};
++
++/* uart1: BT HCI UART with hardware flow control (kernel btnxpuart serdev) */
++&uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart1_maya_pins>;
++	status = "okay";
++	bluetooth {
++		compatible = "nxp,88w8997-bt";
++		fw-init-baudrate = <115200>;
++	};
++};
