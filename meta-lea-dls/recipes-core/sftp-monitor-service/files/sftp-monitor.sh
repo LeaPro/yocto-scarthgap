@@ -34,7 +34,7 @@ while [ 1 = 1 ] ; do
           echo "Firmware update is not allowed when running on PoE. Deleting $FILE."
           rm $FILE
           sleep 5
-          break
+          continue
         fi
         # Get the amp hardware revision from kvs for use in the compatibility test
         REVERSE_COMPATIBLE_HW=$(ipcTool --port=1236 --url=/amp/deviceInfo --method=get --params='["reverseCompatibleHw"]' | jq -r '.result.reverseCompatibleHw')
@@ -55,12 +55,12 @@ while [ 1 = 1 ] ; do
                     ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"HwNotSupportedInFw"}' || true
                     rm $FILE
                     sleep 5
-                    break
+                    continue
                 fi
             else
                 echo "filename is invalid $FILE, can't be evaluated"
                 rm $FILE
-                break
+                continue
             fi
         else
             echo "The detected hwRev [${AMP_HW_REV}] supports all versions of firmware."
