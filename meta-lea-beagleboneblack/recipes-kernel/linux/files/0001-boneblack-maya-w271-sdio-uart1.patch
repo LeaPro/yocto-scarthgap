@@ -1,12 +1,14 @@
 From: LEA Engineering <engineering@lea.com>
 Date: Mon, 4 May 2026 00:00:00 +0000
-Subject: [PATCH] arm: dts: am335x: Add MAYA-W271 WiFi/BT device tree
+Subject: [PATCH] arm: dts: am335x: Add MAYA-W271 WiFi/BT device tree + I2S audio
 
-Add am335x-boneblack-maya.dts for BeagleBone Black with u-blox MAYA-W271 EVK.
+Add am335x-boneblack-maya.dts for BeagleBone Black with u-blox MAYA-W271 EVK
+with PCM5102A DAC audio sink over I2S.
 
 The MAYA-W271 EVK uses:
   - SDIO interface connected to BBB microSD slot (mmc1)
   - UART interface on BBB P9 header uart1 (4-wire with hardware flow control)
+  - I2S interface (McASP0) on BBB P9.29-P9.31 for audio DAC (PCM5102A)
 
 The microSD physical slot is mmc1 on the AM335x. Plugging the MAYA-W271 EVK
 SD edge connector into that slot replaces SD card functionality with SDIO WiFi.
@@ -17,20 +19,16 @@ Changes from standard am335x-boneblack.dts:
   - uart1: enabled with 4-wire flow control pinmux for BT HCI UART
   - Bluetooth child node on uart1 using nxp,88w8997-bt compatible
     (binds to kernel btnxpuart serdev driver)
-
-Note: The IW612 WiFi function is enumerated by the SDIO bus automatically
-(vendor=0x02DF). The mwifiex_sdio driver binds via SDIO device ID without
-requiring a DT child node. The "marvell,sd8997" DT compatible is added as
-a hint for firmware selection.
+  - McASP0 I2S: pinmux for P9.31 (BCK), P9.29 (LRCK), P9.30 (DIN)
+  - simple-audio-card connecting McASP0 -> PCM5102A DAC
+  - PCM5102A codec node (internal PLL, no MCLK required)
 
 Signed-off-by: LEA Engineering <engineering@lea.com>
 ---
- arch/arm/boot/dts/ti/omap/Makefile                   |  1 +
- arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts  | 104 +++++++++++++++++++
- 2 files changed, 105 insertions(+)
+ arch/arm/boot/dts/ti/omap/Makefile                  |   1 +
+ arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts | 167 +++++++++++++++++++
+ 2 files changed, 168 insertions(+)
  create mode 100644 arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts
-
-
 
 diff --git a/arch/arm/boot/dts/ti/omap/Makefile b/arch/arm/boot/dts/ti/omap/Makefile
 index e6f16a963956..b59abf6dbd7c 100644
@@ -46,12 +44,16 @@ index e6f16a963956..b59abf6dbd7c 100644
  	PB-MIKROBUS-0.dtbo \
 diff --git a/arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts b/arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts
 new file mode 100644
+index 000000000000..111111111111
 --- /dev/null
 +++ b/arch/arm/boot/dts/ti/omap/am335x-boneblack-maya.dts
-@@ -0,0 +1,104 @@
+FIXED: hunk updated from +1,167 to +1,144
+FIXED: hunk updated from +1,144 to +1,131
+FIXED: hunk updated from +1,131 to +1,134
+@@ -0,0 +1,134 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * BeagleBone Black with u-blox MAYA-W271 EVK
++ * BeagleBone Black with u-blox MAYA-W271 EVK + PCM5102A DAC
 + *
 + * MAYA-W271 EVK wiring:
 + *   WiFi: SD edge connector -> BBB microSD slot (mmc1, SDIO)
@@ -60,68 +62,87 @@ new file mode 100644
 + *         J4 pin 20 (MA_UART_RTS) -> P9.20 (UART1_CTS)
 + *         J4 pin 22 (MA_UART_CTS) -> P9.19 (UART1_RTS)
 + *
-+ * WiFi firmware: mrvl/sdsd8997_combo_v4.bin  (mwifiex_sdio, sd8997 compat)
-+ * BT  firmware: nxp/iw612/uartnw61x_v1.bin
-+ *
-+ * IMPORTANT: This DTS disables the microSD card slot.
-+ *            For SD card access, boot with am335x-boneblack.dtb.
++ * PCM5102A DAC wiring (I2S over McASP0):
++ *   P9.31 (McASP0_ACLKX) -> PCM5102A BCK (bit clock)
++ *   P9.29 (McASP0_FSX)   -> PCM5102A LRCK (L/R clock, frame sync)
++ *   P9.30 (McASP0_AXR0)  -> PCM5102A DIN (stereo audio data in)
++ *   P9.1 or P9.2 (GND)   -> PCM5102A GND
++ *   P9.3 or P9.4 (3.3V)  -> PCM5102A Vdd
 + */
 +/dts-v1/;
 +
 +#include "am33xx.dtsi"
 +#include "am335x-bone-common.dtsi"
 +#include "am335x-boneblack-common.dtsi"
-+#include "am335x-boneblack-hdmi.dtsi"
 +
 +/ {
-+	model = "TI AM335x BeagleBone Black + u-blox MAYA-W271";
++	model = "TI AM335x BeagleBone Black + u-blox MAYA-W271 + PCM5102A";
 +	compatible = "ti,am335x-bone-black", "ti,am335x-bone", "ti,am33xx";
 +
 +	chosen {
 +		base_dtb = "am335x-boneblack-maya.dts";
 +		base_dtb_timestamp = __TIMESTAMP__;
 +	};
++
++	pcm5102a_codec: pcm5102a_codec {
++		#sound-dai-cells = <0>;
++		compatible = "ti,pcm5102a";
++		status = "okay";
++	};
++
++	sound {
++		compatible = "simple-audio-card";
++		simple-audio-card,name = "PCM5102A-DAC";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,bitclock-master = <&dailink0_cpu>;
++		simple-audio-card,frame-master = <&dailink0_cpu>;
++
++		dailink0_cpu: simple-audio-card,cpu {
++			sound-dai = <&mcasp0>;
++			/* Use internal McASP AUXCLK source and drive clocks out */
++			system-clock-frequency = <24576000>;
++			system-clock-direction-out;
++		};
++
++		simple-audio-card,codec {
++			sound-dai = <&pcm5102a_codec>;
++		};
++	};
 +};
 +
 +&am33xx_pinmux {
-+	/*
-+	 * uart1 4-wire pinmux for BT HCI UART.
-+	 *
-+	 * These pads are muxed as i2c2 in am335x-bone-common.dtsi.
-+	 * We override them here to MUX_MODE0 (native uart1 function).
-+	 * &i2c2 is disabled below to release those pads.
-+	 */
++	/* uart1 4-wire pinmux for BT HCI UART */
 +	uart1_maya_pins: uart1-maya-pins {
 +		pinctrl-single,pins = <
 +			/* P9.26 - uart1_rxd */
-+			AM33XX_PADCONF(AM335X_PIN_UART1_RXD,  PIN_INPUT,           MUX_MODE0)
++			AM33XX_PADCONF(AM335X_PIN_UART1_RXD,  PIN_INPUT,  MUX_MODE0)
 +			/* P9.24 - uart1_txd */
-+			AM33XX_PADCONF(AM335X_PIN_UART1_TXD,  PIN_OUTPUT,          MUX_MODE0)
++			AM33XX_PADCONF(AM335X_PIN_UART1_TXD,  PIN_OUTPUT, MUX_MODE0)
 +			/* P9.20 - uart1_ctsn (module RTS drives our CTS) */
-+			AM33XX_PADCONF(AM335X_PIN_UART1_CTSN, PIN_INPUT,           MUX_MODE0)
++			AM33XX_PADCONF(AM335X_PIN_UART1_CTSN, PIN_INPUT,  MUX_MODE0)
 +			/* P9.19 - uart1_rtsn (our RTS drives module CTS) */
-+			AM33XX_PADCONF(AM335X_PIN_UART1_RTSN, PIN_OUTPUT,          MUX_MODE0)
++			AM33XX_PADCONF(AM335X_PIN_UART1_RTSN, PIN_OUTPUT, MUX_MODE0)
++		>;
++	};
++
++	pcm5102a_pins: pcm5102a_pins {
++		pinctrl-single,pins = <
++			/* P9_31: mcasp0_aclkx (Bit Clock) - MODE0 | OUTPUT */
++			AM33XX_PADCONF(AM335X_PIN_MCASP0_ACLKX, PIN_OUTPUT, MUX_MODE0)
++			/* P9_29: mcasp0_fsx (LRCK) - MODE0 | OUTPUT */
++			AM33XX_PADCONF(AM335X_PIN_MCASP0_FSX, PIN_OUTPUT, MUX_MODE0)
++			/* P9_30: mcasp0_axr0 (Data Out) - MODE0 | OUTPUT */
++			AM33XX_PADCONF(AM335X_PIN_MCASP0_AXR0, PIN_OUTPUT, MUX_MODE0)
 +		>;
 +	};
 +};
 +
-+/*
-+ * i2c2 SCL/SDA share pads with uart1 RTSN/CTSN.
-+ * Disable i2c2 so we can repurpose those pads for uart1 flow control.
-+ */
++/* i2c2 shares pads with uart1 RTSN/CTSN */
 +&i2c2 {
 +	status = "disabled";
 +};
 +
-+/*
-+ * mmc1 = microSD slot physical connector.
-+ * Override bone-common.dtsi mmc1 node: remove card-detect GPIO,
-+ * add non-removable and SDIO interrupt support for MAYA-W271 WiFi.
-+ *
-+ * The mwifiex_sdio driver auto-binds via SDIO enumeration (vendor 0x02DF).
-+ * The child node with "marvell,sd8997" compatible tells mwifiex which
-+ * firmware file to load: mrvl/sdsd8997_combo_v4.bin
-+ */
++/* mmc1 used by MAYA-W271 SDIO WiFi */
 +&mmc1 {
 +	status = "okay";
 +	bus-width = <4>;
@@ -143,7 +164,6 @@ new file mode 100644
 +	};
 +};
 +
-+/* uart1: BT HCI UART with hardware flow control (kernel btnxpuart serdev) */
 +&uart1 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&uart1_maya_pins>;
@@ -152,4 +172,16 @@ new file mode 100644
 +		compatible = "nxp,88w8997-bt";
 +		fw-init-baudrate = <115200>;
 +	};
++};
++
++&mcasp0 {
++	#sound-dai-cells = <0>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcm5102a_pins>;
++	status = "okay";
++	op-mode = <0>;          /* I2S */
++	tdm-slots = <2>;
++	serial-dir = <1 0 0 0>; /* AXR0 is TX (1), others inactive (0) */
++	tx-num-evt = <1>;
++	rx-num-evt = <1>;
 +};

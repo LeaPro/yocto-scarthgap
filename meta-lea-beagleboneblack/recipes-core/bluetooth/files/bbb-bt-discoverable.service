@@ -1,0 +1,13 @@
+[Unit]
+Description=Make Bluetooth discoverable and register bt-agent for BBB audio streaming
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+Type=forking
+ExecStart=/usr/libexec/bbb-bt-discoverable.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
