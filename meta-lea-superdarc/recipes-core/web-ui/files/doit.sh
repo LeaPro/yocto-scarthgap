@@ -14,5 +14,5 @@ rm -rf web-ui-1.0
 mkdir -p web-ui-1.0/www/pages
 mv -t web-ui-1.0/www/pages tmp/build/*
 rm -rf tmp
-tar -czf web-ui-1.0.tar.gz web-ui-1.0
+tar --owner=root --group=root -czf web-ui-1.0.tar.gz web-ui-1.0
 rm -rf web-ui-1.0
