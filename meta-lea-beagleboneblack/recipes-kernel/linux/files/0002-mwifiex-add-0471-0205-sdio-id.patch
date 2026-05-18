@@ -1,0 +1,25 @@
+From: LEA Engineering <engineering@lea.com>
+Date: Mon, 5 May 2026 00:00:00 +0000
+Subject: [PATCH] mwifiex: sdio: add SDIO id 0471:0205 for MAYA-W271/IW612
+
+On BeagleBone Black with MAYA-W271, the SDIO function enumerates as
+vendor 0x0471, device 0x0205. Add an explicit match and map it to the
+existing sd8997 profile so mwifiex_sdio probe can bind.
+
+Signed-off-by: LEA Engineering <engineering@lea.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -974,6 +974,9 @@
+ 		.driver_data = (unsigned long)&mwifiex_sdio_sd8987},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8997_WLAN),
+ 		.driver_data = (unsigned long)&mwifiex_sdio_sd8997},
++	/* NXP-branded enumeration seen with MAYA-W271 / IW612 modules */
++	{SDIO_DEVICE(0x0471, 0x0205),
++		.driver_data = (unsigned long)&mwifiex_sdio_sd8997},
+ 	{},
+ };
+ 
