@@ -81,6 +81,13 @@ ip link set mlan0 down
 ip link set mlan0 up
 systemctl start NetworkManager
 
+## WiFi testing
+nmcli radio wifi on
+nmcli device status
+nmcli device wifi list ifname mlan0
+nmcli device wifi connect "PLUNKWARE" password "soph9295" ifname mlan0
+nmcli device wifi connect "PLUNKWARE" password "soph9295" ifname mlan0
+
 ## BT testing
 modprobe btnxpuart
 sleep 2
@@ -91,6 +98,101 @@ bluetoothctl scan on
 hciconfig -a
 dmesg | grep -Ei "bluetooth|hci|ttyS1|nxp|firmware"
 cat /proc/tty/driver/serial | grep -E "ttyS1|uart:"
+
+## BT audio streaming sink (BBB)
+
+Easiest embedded setup: BlueZ for pairing/control plus BlueALSA for audio routing.
+
+This image now includes a boot-time helper that powers Bluetooth on and leaves the BBB
+discoverable/pairable, so phones should be able to find it without manual setup.
+It also enables BlueALSA's `bluealsa-aplay` sink service so A2DP audio can actually
+start the McASP clocks when the phone begins playback.
+
+Goal:
+- make the BBB always discoverable and pairable
+- accept simple/Just Works pairings
+- trust the device once paired so it can reconnect and stream automatically
+
+Typical `bluetoothctl` flow:
+
+```bash
+bluetoothctl
+power on
+agent NoInputNoOutput
+default-agent
+discoverable on
+pairable on
+scan on
+# when a source appears:
+#   pair <MAC>
+#   trust <MAC>
+#   connect <MAC>
+```
+
+Notes:
+- Most phones/laptops still require the user to confirm pairing on the source side.
+- After the first pairing, `trust <MAC>` lets the device reconnect without more prompts.
+- For streaming, keep the Bluetooth audio service running (BlueALSA or the equivalent audio bridge in your image) and route its output to the McASP ALSA device.
+- For a minimal BBB image, BlueALSA is usually simpler than a full desktop audio stack.
+
+Known-good validation sequence after each fresh boot:
+
+```bash
+# 1) Core services should be active
+systemctl status bluetooth bbb-bt-discoverable bbb-bt-autotrust bluealsa bluealsa-aplay
+
+# 2) Adapter should be powered/discoverable/pairable
+bluetoothctl show
+
+# 3) bluealsa-aplay should be running as a single process
+pgrep -a bluealsa-aplay
+
+# 4) Pair/connect from phone, then verify trust + connection state
+bluetoothctl devices
+bluetoothctl info <PHONE_MAC>
+
+# Expected: Paired: yes, Bonded: yes, Trusted: yes, Connected: yes
+
+# 5) Start playback from phone and verify the stream appears
+bluealsa-aplay --list-devices
+```
+
+If the phone is paired but `Trusted: no`, inspect autotrust logs:
+
+```bash
+journalctl -u bbb-bt-autotrust -n 100 --no-pager
+```
+
+
+## McASP audio-only sine test (BBB)
+
+Use this to validate only the ALSA/McASP/PCM5102A path before testing BT audio streaming.
+
+Hardware note (important):
+- Some PCM5102A breakout boards leave `XSMT` (soft mute) floating or pull it low.
+- If `XSMT` is not held high, BCK/LRCK/DIN can look correct but audio output remains muted.
+- Tie `XSMT` to 3.3V for normal line-level output.
+
+```bash
+# 1) Confirm kernel audio path is present
+dmesg | grep -Ei "mcasp|pcm5102|simple-audio-card|asoc|snd"
+
+# 2) Confirm ALSA sees the sound card/device
+aplay -l
+
+# 3) Generate a 1 kHz stereo sine tone for 5 seconds
+# If your card/device differs, replace hw:0,0 with the values from aplay -l
+speaker-test -D hw:0,0 -c 2 -r 48000 -F S16_LE -t sine -f 1000 -l 1
+
+# Optional: continuous tone (stop with Ctrl+C)
+speaker-test -D hw:0,0 -c 2 -r 48000 -F S16_LE -t sine -f 1000 -l 0
+```
+
+Expected result:
+- `aplay -l` shows the McASP/simple-audio-card device.
+- `speaker-test` runs without `Input/output error` and audible tone is present at the DAC output.
+
+
 
 IMPORTANT:
 - Do not use `hciconfig hci0 up` for initial bring-up on this platform state.

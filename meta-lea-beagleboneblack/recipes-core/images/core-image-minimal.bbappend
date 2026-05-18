@@ -21,7 +21,15 @@ IMAGE_INSTALL:append = " \
     linux-firmware-nxpiw612-sdio \
     kernel-module-hci-uart \
     kernel-module-btnxpuart \
+    kernel-module-snd-soc-ti-edma \
+    kernel-module-snd-soc-davinci-mcasp \
+    kernel-module-snd-soc-simple-card \
+    kernel-module-snd-soc-pcm5102a \
     bluez5 \
+    bluealsa \
+    bluealsa-aplay \
+    alsa-utils \
+    alsa-plugins \
     iw \
     networkmanager \
 "
