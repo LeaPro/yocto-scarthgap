@@ -88,6 +88,20 @@ nmcli device wifi list ifname mlan0
 nmcli device wifi connect "PLUNKWARE" password "soph9295" ifname mlan0
 nmcli device wifi connect "PLUNKWARE" password "soph9295" ifname mlan0
 
+## BT Pairing Data Persistence (Production TODO)
+
+Bluetooth pairing data (link keys, trust records) is stored in `/var/lib/bluetooth/` on the
+root filesystem. This means **every firmware update wipes pairing data**, requiring the user
+to forget and re-pair the device from their phone.
+
+For production, `/var/lib/bluetooth/` should be relocated to a dedicated persistent data
+partition that survives flashing (similar to an Android `/data` partition). This requires:
+- A separate data partition in the Yocto image partition layout (e.g. `wks` file)
+- A bind-mount or symlink from `/var/lib/bluetooth` → `/data/bluetooth` at boot
+- The data partition must not be erased by the OTA/flash update procedure
+
+Until this is implemented, users must re-pair after every firmware update.
+
 ## BT testing
 modprobe btnxpuart
 sleep 2
@@ -587,3 +601,442 @@ and just run:
 bitbake nxp-mwifiex -f -c compile
 bitbake core-image-minimal
 ```
+
+
+
+---
+
+## C++ BlueZ D-Bus Agent Design
+
+### Purpose
+
+Define how to implement a BlueZ pairing agent in C++ as an object hosted inside the
+product primary application process.
+
+The objective is to replace the Python prototype (`bbb-bt-agent.py`) with a
+deterministic, testable component that owns pairing, trust policy, Bluetooth
+authorization behavior, and A2DP reconnect logic, while exposing control and telemetry
+through the product websocket API.
+
+---
+
+### Validated Baseline (Python prototype)
+
+Before implementing in C++, the following behavior was validated on hardware with the
+Python prototype. The C++ implementation must reproduce all of it exactly.
+
+#### A2DP connection direction
+
+The BBB is an **A2DP Sink**. BlueAlsa runs as `bluealsa -p a2dp-sink` and registers
+a passive incoming handler — it does **not** initiate outbound A2DP connections.
+
+Consequence:
+- `Device1.Connect()` always fails immediately with `org.bluez.Error.Failed: Input/output error`
+  because there is no outgoing A2DP profile handler registered.
+- The correct call to initiate reconnect from the BBB side is:
+
+```
+Device1.ConnectProfile("0000110a-0000-1000-8000-00805f9b34fb")
+```
+
+This is the A2DP **Source** UUID — it connects the BBB to the phone's source role.
+BlueAlsa's registered sink handles the incoming stream once the profile connection is up.
+
+#### Reconnect sequence on boot
+
+1. Wait for adapter to appear and BlueAlsa to register its profiles with BlueZ.
+2. Set adapter `Powered`, `Pairable`, `Discoverable`.
+3. Register agent and `RequestDefaultAgent`.
+4. For each trusted+paired device that is not yet connected: call `ConnectProfile(A2DP_SOURCE_UUID)`.
+5. If `br-connection-unknown` is returned, phone BT radio is asleep — retry every ~15 s.
+6. Stop retrying once `Device1.Connected = true`.
+
+`br-connection-unknown` is not an error; it is the normal response when the remote
+device's BT radio has not yet polled. No special handling needed beyond retry.
+
+#### Pairing not allowed / link key mismatch
+
+`Pairing Not Allowed (0x18)` from the phone during `ConnectProfile` means the stored
+link key on the BBB does not match what the phone has. Root cause is usually:
+
+- BBB filesystem was reflashed without removing the pairing from the phone first.
+- A previous session left a stale `[LinkKey]` in `/var/lib/bluetooth/<adapter>/<device>/info`.
+
+Recovery: remove device from both sides and re-pair from scratch. After fresh pairing,
+`ConnectProfile` succeeds on the first attempt on every subsequent power cycle.
+
+#### Pairing with LE disabled
+
+With `ControllerMode = bredr` and `DisableLE = true` in `main.conf`, the phone will
+not offer LE keys during pairing. This avoids the kernel boot warning:
+
+```
+Bluetooth: hci0: Invalid link address type 1 for <addr>
+```
+
+which appeared when the device was previously paired while LE was still enabled and
+BlueZ tried to load the stored LE identity on boot. With LE disabled at pairing time
+the warning does not occur.
+
+#### `main.conf` required settings
+
+```ini
+[General]
+DiscoverableTimeout = 0
+PairableTimeout = 0
+ControllerMode = bredr
+
+[Policy]
+AutoEnable = true
+JustWorksRepairing = always
+
+[GATT]
+DisableLE = true
+```
+
+Key points:
+- `AutoEnable = true` is required for the NXP IW612 to power on reliably at bluetoothd startup.
+- `JustWorksRepairing = always` allows already-paired phones to reconnect without a
+  new pairing confirmation dialog.
+- `ControllerMode = bredr` restricts to classic BT only; combined with `DisableLE = true`
+  this prevents LE key storage and avoids the `Invalid link address type` warning.
+- `Experimental = true` is **not** needed. `Device1.ConnectProfile` is a standard
+  BlueZ API. Experimental interfaces (`Adapter1.ConnectDevice`, `PreferredBearer`) are
+  only relevant for dual-mode bearer steering, which is not needed here.
+
+#### Service ordering
+
+The agent service must start after both `bluetooth.service` **and** `bluealsa.service`:
+
+```ini
+[Unit]
+After=bluetooth.service bluealsa.service
+Requires=bluetooth.service bluealsa.service
+```
+
+If `bbb-bt-agent` starts before BlueAlsa has registered its A2DP sink profile with
+BlueZ, `ConnectProfile` will fail because BlueZ has no handler for the profile yet.
+
+---
+
+### Product Assumptions
+
+- The Bluetooth agent is a normal application object created by the primary service.
+- The application framework supports object lifecycle hooks, optional worker threads,
+  and periodic update callbacks.
+- A websocket API already exists and is the control and monitoring plane for product objects.
+- BlueZ is running as `bluetoothd` on the system bus and remains the Bluetooth stack authority.
+- BlueAlsa (`bluealsa -p a2dp-sink`) handles A2DP media — the agent does not touch audio.
+- Target mode is headless audio sink with `NoInputNoOutput` pairing capability.
+
+---
+
+### Scope
+
+**In scope:**
+- `org.bluez.Agent1` implementation and registration.
+- Adapter state management at startup (`Powered`, `Pairable`, `Discoverable`).
+- Pairing confirmation and service authorization policy.
+- Device trust state management.
+- Boot-time `ConnectProfile` reconnect with retry loop.
+- Websocket commands and events for operations and observability.
+
+**Out of scope:**
+- Replacing BlueZ media profile internals.
+- Audio pipeline implementation details.
+- Kernel or firmware transport changes.
+- BlueAlsa configuration.
+
+---
+
+### D-Bus Interfaces and Methods
+
+BlueZ interfaces used:
+
+- `org.bluez.AgentManager1`
+- `org.bluez.Agent1`
+- `org.bluez.Adapter1`
+- `org.bluez.Device1`
+- `org.freedesktop.DBus.Properties`
+- `org.freedesktop.DBus.ObjectManager`
+
+#### Agent methods to implement
+
+| Method | Inputs | Behavior |
+|--------|--------|----------|
+| `Release` | — | Mark agent unregistered; trigger re-registration |
+| `RequestPinCode` | device | Reject (`org.bluez.Error.Rejected`) — `NoInputNoOutput` mode |
+| `DisplayPinCode` | device, pin | Log and emit websocket event |
+| `RequestPasskey` | device | Reject — `NoInputNoOutput` mode |
+| `DisplayPasskey` | device, passkey, entered | Log and emit websocket event |
+| `RequestConfirmation` | device, passkey | Accept (JustWorks) or await websocket approval with timeout |
+| `RequestAuthorization` | device | Accept for trusted/policy-approved devices |
+| `AuthorizeService` | device, uuid | Accept audio UUIDs; set `Device1.Trusted = true` here |
+| `Cancel` | — | Clear pending transaction; emit cancellation event |
+
+> **Note:** `AuthorizeService` is the correct place to set `Trusted = true`. It is
+> called once per profile connection during the pairing flow, providing the device
+> object path needed to write the property.
+
+#### Agent registration flow
+
+```
+AgentManager1.RegisterAgent(agentPath, "NoInputNoOutput")
+AgentManager1.RequestDefaultAgent(agentPath)
+ObjectManager.GetManagedObjects()  // enumerate existing devices
+Subscribe: ObjectManager InterfacesAdded/Removed
+Subscribe: Device1 PropertiesChanged (Connected, Trusted, Paired)
+```
+
+#### Reconnect call
+
+```
+Device1.ConnectProfile("0000110a-0000-1000-8000-00805f9b34fb")  // A2DP Source UUID
+```
+
+Call this after registration for each device where `Trusted=true`, `Paired=true`,
+`Connected=false`. Retry on `br-connection-unknown`. Stop when `Connected=true`.
+
+---
+
+### C++ Object Model
+
+| Class | Responsibility |
+|-------|---------------|
+| `BluetoothAgentObject` | Lifecycle, config, state machine. Public API for app object manager. |
+| `BlueZBusClient` | Thin wrapper over sd-bus or sdbus-c++. Method calls, signal subscriptions. |
+| `BlueZAgentAdaptor` | Hosts `org.bluez.Agent1` object path. Converts BlueZ callbacks to internal events. |
+| `PairingPolicyEngine` | Accept/deny decisions: mode matrix, UUID allowlist, websocket approval with timeout fallback. |
+| `ReconnectManager` | Boot-time and post-disconnect `ConnectProfile` retry loop. Monitors `PropertiesChanged` to cancel when connected. |
+| `DeviceRegistry` | In-memory cache keyed by address and object path. Mirrors `Paired`, `Bonded`, `Trusted`, `Connected`, `UUIDs`, `Alias`. |
+| `BluetoothWsBridge` | Maps websocket commands to agent actions; emits normalized BT events and snapshots. |
+
+---
+
+### Threading and Event Loop Strategy
+
+**Model A — Dedicated Bluetooth thread (recommended):**
+
+- Run D-Bus event loop and all BlueZ interactions on one worker thread.
+- App framework posts commands via thread-safe queue.
+- Preferred: deterministic ordering, no race conditions on BlueZ state.
+- Keep websocket handlers off the D-Bus thread; forward through queue.
+
+**Model B — Periodic update integration:**
+
+- D-Bus dispatch pumped from periodic update callback.
+- Only viable if update cadence is tight and non-blocking.
+- Higher risk of delayed callback handling under load.
+
+Use Model A for production. Keep all BlueZ state mutations single-threaded.
+
+---
+
+### Pairing and Trust Policy
+
+Base policy for headless sink:
+
+- **Capability:** `NoInputNoOutput`
+- **Unknown device pairing:**
+  - `PairingMode = Open` → auto-accept `RequestConfirmation`
+  - `PairingMode = Managed` → queue for websocket operator approval with timeout
+- **`Trusted` flag:** set in `AuthorizeService` after successful pairing when policy
+  says remember device. Do not trust for session-only pairings.
+- **`AuthorizeService` UUID filter:** accept only known audio profile UUIDs
+  (A2DP Source `0000110a`, AVRCP Target `0000110c`, AVRCP `0000110e`, HFP AG `0000111f`, etc.)
+- **Timeout:** pending websocket confirmation expires after configurable deadline;
+  auto-reject and emit `bluetooth.pairing.timeout` on expiry.
+
+---
+
+### Websocket API Integration
+
+#### Commands
+
+| Command | Payload |
+|---------|---------|
+| `bluetooth.set_mode` | `mode`: `open` \| `managed` \| `locked` |
+| `bluetooth.start_pairing_window` | `durationSec` |
+| `bluetooth.stop_pairing_window` | — |
+| `bluetooth.set_device_trust` | `address`, `trusted` |
+| `bluetooth.remove_device` | `address` |
+| `bluetooth.get_state` | — |
+| `bluetooth.reconnect` | `address` (optional; reconnect all trusted if omitted) |
+
+#### Events
+
+| Event | When |
+|-------|------|
+| `bluetooth.agent.ready` | Agent registered and adapter configured |
+| `bluetooth.agent.recovered` | Re-registered after bluetoothd restart |
+| `bluetooth.pairing.requested` | `RequestConfirmation` received in managed mode |
+| `bluetooth.pairing.accepted` | Pairing confirmed |
+| `bluetooth.pairing.rejected` | Pairing denied or timed out |
+| `bluetooth.device.paired` | New device paired and trusted |
+| `bluetooth.device.trust.changed` | `Trusted` property changed |
+| `bluetooth.device.connected` | `Connected` property went true |
+| `bluetooth.device.disconnected` | `Connected` property went false |
+| `bluetooth.reconnect.attempt` | `ConnectProfile` called for a device |
+| `bluetooth.reconnect.failed` | `ConnectProfile` returned non-retryable error |
+| `bluetooth.error` | Unrecoverable D-Bus or adapter error |
+
+#### Suggested event payload fields
+
+```json
+{
+  "timestampUtc": "...",
+  "adapterAddress": "20:BA:36:53:87:14",
+  "deviceAddress": "34:39:16:65:8E:67",
+  "deviceName": "Pixel 9a",
+  "bluezObjectPath": "/org/bluez/hci0/dev_34_39_16_65_8E_67",
+  "reasonCode": "br-connection-unknown",
+  "correlationId": "..."
+}
+```
+
+---
+
+### Lifecycle and Recovery
+
+#### Startup sequence
+
+1. Create `BluetoothAgentObject` from app object factory.
+2. Connect to system D-Bus; verify `org.bluez` is present.
+3. Wait for adapter object path (`/org/bluez/hci0`) — poll via `ObjectManager`.
+4. Wait for BlueAlsa to register A2DP sink profile (check via `ObjectManager` or fixed delay).
+5. Set adapter `Powered`, `Pairable`, `Discoverable`.
+6. Register agent; call `RequestDefaultAgent`.
+7. Enumerate trusted+paired+disconnected devices; call `ConnectProfile` for each.
+8. Publish `bluetooth.agent.ready`.
+
+#### Shutdown sequence
+
+1. Stop accepting new pairing requests.
+2. Cancel pending reconnect retries.
+3. Unregister default agent and agent D-Bus object.
+4. Flush pending websocket responses with terminal status.
+5. Publish `bluetooth.agent.stopped`.
+
+#### Recovery on bluetoothd restart
+
+Subscribe to `org.freedesktop.DBus.NameOwnerChanged` for `org.bluez`. On ownership
+change:
+
+1. Invalidate all cached proxies and device registry state.
+2. Re-run startup sequence from step 3.
+3. Publish `bluetooth.agent.recovered`.
+
+---
+
+### Observability
+
+#### Log categories
+
+- `lifecycle` — start, stop, recover
+- `dbus.call` — every outgoing method call with result
+- `dbus.signal` — every received signal with key property changes
+- `policy` — pairing accept/reject decisions and reasons
+- `reconnect` — ConnectProfile attempts, outcomes, retry scheduling
+- `websocket` — command receipt and event dispatch
+- `error` — unexpected failures
+
+#### Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `pairing_requests_total` | Total pairing requests received |
+| `pairing_accept_total` | Auto-accepted pairings |
+| `pairing_reject_total` | Rejected pairings |
+| `pairing_timeout_total` | Managed-mode pairings that timed out |
+| `trust_set_total` | Times `Trusted = true` was written |
+| `agent_recoveries_total` | bluetoothd restart recoveries |
+| `reconnect_attempts_total` | `ConnectProfile` calls made |
+| `reconnect_success_total` | `ConnectProfile` calls that resulted in `Connected = true` |
+| `pending_pairing_requests` | Current queue depth (gauge) |
+| `known_devices` | Devices in registry (gauge) |
+
+---
+
+### Security and Operational Controls
+
+- Restrict websocket command access using existing app authn/authz.
+- Validate MAC address format and UUID format before any D-Bus call.
+- Rate-limit pairing commands and mode switches.
+- Enforce bounded pending-request queue; reject when full.
+- Default production mode: `managed` or `locked`. Use `open` only during controlled
+  commissioning windows.
+- Never pass unvalidated websocket input as D-Bus method arguments.
+
+---
+
+### Yocto Integration Notes
+
+Build/runtime dependencies:
+
+- `bluez5`
+- `dbus`
+- D-Bus C++ binding: `libsystemd` (sd-bus) or `sdbus-c++`
+- `bluealsa` (runtime dependency; must start before agent)
+
+Packaging:
+
+- Ship as part of the main application package.
+- Keep `main.conf` in the recipe-managed config file (`nxp-bt-config` recipe or equivalent).
+- systemd unit `After=bluetooth.service bluealsa.service`; `Requires=` both.
+- Keep systemd focused on launching the main app; do not add reconnect scripts.
+
+---
+
+### Testing Plan
+
+#### Unit tests
+
+- `PairingPolicyEngine` decisions across mode matrix (`open`/`managed`/`locked`) and UUID filter.
+- `DeviceRegistry` updates from synthetic `PropertiesChanged` signal sequences.
+- `ReconnectManager` retry scheduling: verify fires on `br-connection-unknown`, stops on `Connected=true`.
+- Websocket command validation and command-to-action mapping.
+
+#### Integration tests
+
+- Mock BlueZ D-Bus service for `Agent1` callback sequences.
+- Verify re-registration on simulated `NameOwnerChanged`.
+- Validate property writes for `Powered`, `Pairable`, `Discoverable`, and `Trusted`.
+- Simulate `ConnectProfile` returning `br-connection-unknown` N times then succeeding; verify retry count and final state.
+- Simulate link key mismatch (`Authentication Failure`); verify agent logs error and does not retry indefinitely.
+
+#### Hardware tests
+
+- Cold boot pairing in `open` and `managed` mode.
+- Power cycle with trusted device present: verify `ConnectProfile` succeeds on first or subsequent attempt.
+- Power cycle with phone screen off: verify `br-connection-unknown` retries until phone wakes.
+- Re-flash BBB without forgetting from phone: verify `Pairing Not Allowed` is detected and logged; recover by re-pairing.
+- Verify `aplay -l` and audio pass-through after repeated connect/disconnect cycles.
+- Verify no `Invalid link address type` warning in kernel log after pairing with LE disabled.
+
+---
+
+### Phased Implementation Plan
+
+**Phase 1 — Infrastructure**
+- Add `BlueZBusClient` and `BlueZAgentAdaptor` scaffolding.
+- Register agent; log all callbacks.
+- Set adapter properties on startup.
+
+**Phase 2 — Reconnect**
+- Implement `ReconnectManager` with `ConnectProfile` + retry loop.
+- Subscribe to `PropertiesChanged` to cancel retry when `Connected = true`.
+- Emit `bluetooth.reconnect.*` events.
+
+**Phase 3 — Policy and websocket control**
+- Implement `PairingPolicyEngine` with mode matrix and UUID filter.
+- Add websocket commands/events and mode control.
+- Implement managed-mode approval queue with timeout.
+
+**Phase 4 — Trust and recovery hardening**
+- Explicit trust management APIs.
+- `NameOwnerChanged` recovery for bluetoothd restart.
+- Metrics instrumentation.
+
+**Phase 5 — Validation and rollout**
+- Complete integration and hardware test matrix above.
+- Enable by default on target products; monitor field telemetry.

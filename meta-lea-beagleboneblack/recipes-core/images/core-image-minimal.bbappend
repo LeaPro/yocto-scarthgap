@@ -12,11 +12,8 @@
 # - linux-firmware-nxpiw612-sdio provides iw612 BT runtime blob
 #   (uartspi_n61x_v1.bin.se)
 # - kernel-module-hci-uart: HCI UART for BT half of IW612
+# - bluez5-noinst-tools provides btmgmt for non-interactive adapter control
 IMAGE_INSTALL:append = " \
-    kernel-module-mlan \
-    kernel-module-moal \
-    nxp-mwifiex \
-    nxp-iw612-fw \
     linux-firmware-nxp8997-common \
     linux-firmware-nxpiw612-sdio \
     kernel-module-hci-uart \
@@ -26,6 +23,7 @@ IMAGE_INSTALL:append = " \
     kernel-module-snd-soc-simple-card \
     kernel-module-snd-soc-pcm5102a \
     bluez5 \
+    bluez5-noinst-tools \
     bluealsa \
     bluealsa-aplay \
     alsa-utils \

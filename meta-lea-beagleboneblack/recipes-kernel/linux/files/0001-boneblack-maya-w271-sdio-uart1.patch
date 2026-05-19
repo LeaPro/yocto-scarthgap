@@ -50,7 +50,8 @@ index 000000000000..111111111111
 FIXED: hunk updated from +1,167 to +1,144
 FIXED: hunk updated from +1,144 to +1,131
 FIXED: hunk updated from +1,131 to +1,134
-@@ -0,0 +1,134 @@
+FIXED: hunk updated from +1,134 to +1,117
+@@ -0,0 +1,117 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * BeagleBone Black with u-blox MAYA-W271 EVK + PCM5102A DAC
@@ -144,24 +145,7 @@ FIXED: hunk updated from +1,131 to +1,134
 +
 +/* mmc1 used by MAYA-W271 SDIO WiFi */
 +&mmc1 {
-+	status = "okay";
-+	bus-width = <4>;
-+	non-removable;
-+	cap-sdio-irq;
-+	keep-power-in-suspend;
-+	no-1-8-v;
-+	ti,needs-special-hs-handling;
-+	max-frequency = <25000000>;
-+	/delete-property/ cd-gpios;
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&mmc1_pins>;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlan: wlan@1 {
-+		compatible = "marvell,sd8997";
-+		reg = <1>;
-+	};
++	status = "disabled";
 +};
 +
 +&uart1 {

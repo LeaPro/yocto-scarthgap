@@ -1,0 +1,15 @@
+[Unit]
+Description=BlueZ D-Bus Pairing Agent for BBB Bluetooth audio
+After=bluetooth.service bluealsa.service
+Requires=bluetooth.service bluealsa.service
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bbb-bt-agent.py
+Restart=always
+RestartSec=2
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
