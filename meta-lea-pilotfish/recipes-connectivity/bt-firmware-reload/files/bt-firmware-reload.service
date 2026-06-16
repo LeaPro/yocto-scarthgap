@@ -1,0 +1,11 @@
+[Unit]
+Description=Reload BCM Bluetooth firmware after udev is ready
+After=systemd-udevd.service
+Before=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo serial0-0 > /sys/bus/serial/drivers/hci_uart_bcm/unbind 2>/dev/null || true; sleep 1; echo serial0-0 > /sys/bus/serial/drivers/hci_uart_bcm/bind 2>/dev/null || true; sleep 3'
+
+[Install]
+WantedBy=multi-user.target

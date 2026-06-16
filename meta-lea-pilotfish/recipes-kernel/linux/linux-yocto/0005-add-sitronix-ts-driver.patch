@@ -3509,7 +3509,7 @@ index 000000000000..2cd2c45b4f12
 +			}//end of if(!gts->in_suspend)
 +#endif 
 +
-+			stmsg("monitor sensing counter: %02x %02x\n", buf[0xA], buf[0xB]);
++			//stmsg("monitor sensing counter: %02x %02x\n", buf[0xA], buf[0xB]);
 +
 +			//Bus read failed.
 +			if (ret < 0) {

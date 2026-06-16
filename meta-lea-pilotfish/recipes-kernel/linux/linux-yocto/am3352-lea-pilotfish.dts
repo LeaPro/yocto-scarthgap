@@ -258,6 +258,21 @@
     >;
   };
 
+	/* McASP1 I2S output to Dante module.
+	 * All three pads are on the MCASP0_* ball row, muxed to mcasp1 at MUX_MODE3.
+	 * McASP1 is configured as I2S master (drives BCLK and LRCLK).
+	 *   MCASP0_ACLKR  (B12 / gpio3_18) → mcasp1_aclkx  = BCLK
+	 *   MCASP0_FSR    (C13 / gpio3_19) → mcasp1_fsx    = LRCLK
+	 *   MCASP0_AHCLKX (A14 / gpio3_21) → mcasp1_axr1   = DOUT (serializer 1)
+	 */
+	mcasp1_pins: pinmux_mcasp1_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_ACLKR,  PIN_OUTPUT_PULLDOWN, MUX_MODE3) /* mcasp0_aclkr.mcasp1_aclkx  - BCLK  (B12) */
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_FSR,    PIN_OUTPUT_PULLDOWN, MUX_MODE3) /* mcasp0_fsr.mcasp1_fsx      - LRCLK (C13) */
+			AM33XX_PADCONF(AM335X_PIN_MCASP0_AHCLKX, PIN_OUTPUT_PULLDOWN, MUX_MODE3) /* mcasp0_ahclkx.mcasp1_axr1  - DOUT  (A14) */
+		>;
+	};
+
 	ehrpwm1_pins: pinmux_ehrpwm1_pins {
 		pinctrl-single,pins = <
 			/* AM33XX_PADCONF(AM335X_PIN_GPMC_A2, PIN_OUTPUT_PULLDOWN, MUX_MODE6) *//* ehrpwm1 A */
@@ -307,6 +322,12 @@
 			AM33XX_PADCONF(AM335X_PIN_LCD_AC_BIAS_EN, PIN_OUTPUT, MUX_MODE0)	/* lcd_ac_bias_en / DE */
 		>;
 	};
+
+	usb0_drvvbus_pins: pinmux_usb0_drvvbus_pins {
+		pinctrl-single,pins = <
+			AM33XX_PADCONF(AM335X_PIN_USB0_DRVVBUS, PIN_OUTPUT_PULLDOWN, MUX_MODE0)	/* usb0_drvvbus - MUSB hardware VBUS enable output to external 5V switch */
+		>;
+	};
 };
 
 &uart0 {
@@ -322,7 +343,7 @@
 
 	bluetooth {
 		compatible = "brcm,bcm43438-bt";
-		max-speed = <115200>;
+		max-speed = <3000000>;
 		shutdown-gpios = <&gpio1 14 GPIO_ACTIVE_HIGH>;
 	};
 };
@@ -787,6 +808,8 @@
 };
 
 &usb0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb0_drvvbus_pins>;
 	dr_mode = "host";
 	status = "okay";
 };
@@ -868,4 +891,55 @@
 / {
 	/delete-node/ clk_mcasp0;
 	/delete-node/ sound;
+};
+
+/* -----------------------------------------------------------------------
+ * McASP1 I2S output → Dante module
+ *
+ * McASP1 is configured as I2S master, 2-channel, 32-bit slots at 48 kHz.
+ * Serializer 1 (AXR1, pad A14) is the transmit data line.
+ * The Dante module is an I2S slave receiver and requires no codec driver —
+ * a dummy codec is used so the simple-audio-card machine driver can bind.
+ *
+ * ALSA PCM device: hw:1,0  (card "pilotfish-dante", device 0)
+ * PipeWire/PulseAudio will route the BlueZ A2DP sink here automatically
+ * once the card is registered.
+ * ----------------------------------------------------------------------- */
+/ {
+	dante_codec: dante-dummy-codec {
+		compatible = "linux,spdif-dit";
+		#sound-dai-cells = <0>;
+	};
+
+	sound_dante: sound-dante {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "pilotfish-dante";
+		simple-audio-card,format = "i2s";
+		/* McASP1 is I2S master: drives BCLK and LRCLK */
+		simple-audio-card,bitclock-master = <&dante_cpu_dai>;
+		simple-audio-card,frame-master = <&dante_cpu_dai>;
+
+		dante_cpu_dai: simple-audio-card,cpu {
+			sound-dai = <&mcasp1>;
+			system-clock-frequency = <24576000>; /* 512 * 48000 Hz */
+		};
+
+		simple-audio-card,codec {
+			sound-dai = <&dante_codec>;
+		};
+	};
+};
+
+&mcasp1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&mcasp1_pins>;
+	status = "okay";
+	#sound-dai-cells = <0>;
+	op-mode = <0>;		/* MCASP_IIS_MODE */
+	tdm-slots = <2>;
+	/* serial-dir: 0=inactive, 1=TX, 2=RX
+	 * 4 serializers: ser0=inactive, ser1=TX(AXR1/A14), ser2=inactive, ser3=inactive */
+	serial-dir = <0 1 0 0>;
+	tx-num-evt = <32>;
+	rx-num-evt = <0>;
 };

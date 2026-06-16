@@ -27,6 +27,7 @@ SRC_URI += "file://devtool-fragment.cfg \
             file://0005-add-sitronix-ts-driver.patch \
             file://am33xx-lea-pilotfish.dtsi;subdir=git/arch/arm/boot/dts \
             file://am3352-lea-pilotfish.dts;subdir=git/arch/arm/boot/dts \
+            file://am3352-lea-pilotfish-btprog.dts;subdir=git/arch/arm/boot/dts \
             "
 do_install:append() {
     # create a symlink in /boot named am335x-boneblack.dtb for compatibility with legacy u-boot environment

@@ -1,0 +1,31 @@
+#!/usr/bin/pulseaudio -nF
+#
+# PulseAudio system.pa for LEA Pilotfish
+# Runs as system daemon (pulseaudio --system)
+# Handles Bluetooth A2DP audio streaming via BlueZ5
+#
+
+# Base setup
+load-module module-device-restore
+load-module module-stream-restore
+load-module module-card-restore
+
+# Null sink fallback (so there's always something for streams to connect to)
+load-module module-null-sink sink_name=null sink_properties=device.description="Null_Sink"
+
+# Always-present sink (prevents "no default sink" errors)
+load-module module-always-sink
+
+# Bluetooth discovery and device support (BlueZ5)
+load-module module-bluetooth-policy
+load-module module-bluetooth-discover
+
+# Unix socket for pactl/client access
+load-module module-native-protocol-unix auth-anonymous=1
+
+# ALSA sink: McASP1 I2S output to Dante module
+# Card name comes from simple-audio-card,name = "pilotfish-dante" in DTS
+load-module module-alsa-sink device=hw:pilotfishdante sink_name=dante_sink sink_properties=device.description="Dante_I2S"
+
+# Loopback: route BT A2DP source to Dante I2S sink
+load-module module-loopback sink=dante_sink latency_msec=100

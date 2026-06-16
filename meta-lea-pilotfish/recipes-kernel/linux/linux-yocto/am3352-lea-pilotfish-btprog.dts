@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * am3352-lea-pilotfish-btprog.dts
+ *
+ * Identical to am3352-lea-pilotfish.dts except the bluetooth serdev child
+ * node is removed from uart1.  Without that node, omap8250 registers UART1
+ * as a plain tty (/dev/ttyS1) instead of a serdev controller, making the
+ * port available for wmbt BT module flash programming.
+ *
+ * Usage: swap this DTB into /boot and reboot before running btProgEnable.sh.
+ * btProgEnable.sh and btProgDisable.sh handle the swap automatically.
+ */
+
+/* Pull in the full production DTS */
+#include "am3352-lea-pilotfish.dts"
+
+/* Delete the bluetooth serdev child so UART1 becomes a plain tty */
+&uart1 {
+	/delete-node/ bluetooth;
+};
