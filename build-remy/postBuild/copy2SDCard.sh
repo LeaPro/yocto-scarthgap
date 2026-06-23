@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# script to copy root filesystem to SDCard for use on beagleplay
+# script to copy root filesystem to SDCard 
 
 # expects SDCard 'boot' and 'rootfs' partitions to be mounted (happens automatically in linux mint when I plug in an SDCard formatted with 'format-sdcard.sh')
 MOUNT_DIR=/media/${SUDO_USER}/rootfs
@@ -38,10 +38,5 @@ popd
 cp ${BUILDDIR}/../../u-boot/lea_remy/{tiboot3.bin,tispl.bin,u-boot.img} ${MOUNT_DIR}/boot/
 
 sync
-
-# unmount the SDCard partitions if the first argument ($1) is the string "umount"
-if [ "$1" = "umount" ]; then
-  mount | awk '/mmcblk0/ {print $1}' | xargs umount
-fi
 
 echo "Done."

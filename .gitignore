@@ -106,3 +106,5 @@ build-*/conf/conf-summary.txt
 meta-lea-remy/recipes-core/sftp-monitor-service/files/tiboot3.bin
 
 meta-lea-remy/recipes-core/sftp-monitor-service/files/tispl.bin
+
+build-remy/postBuild/sdcard.img

@@ -1,5 +1,5 @@
 SHELL:=/bin/bash
-.PHONY: help sdk
+.PHONY: help sdk recompile-dtb
 
 BUILD_DIR=$(realpath .)
 LEA_DIR=$(realpath ../..)
@@ -8,6 +8,7 @@ WEBSOCKETAPI_DIR=${LEA_DIR}/WebsocketAPI
 REMY_DIR=${LEA_DIR}/Remora
 
 YOCTO_IMAGE=core-image-minimal
+KERNEL_RECIPE=virtual/kernel
 
 SDK_SETUP_DIR:=$(realpath $(BUILD_DIR)/..)/sdk/remy
 SDK_SETUP_TARGET:=$(SDK_SETUP_DIR)/.dummy-target
@@ -78,6 +79,10 @@ image:
 	mkdir -p ${BUILD_DIR}/postBuild/images
 	@cp $(BUILD_DIR)/deploy-ti/images/lea-remy/core-image-minimal-lea-remy.rootfs.tar.xz ${BUILD_DIR}/postBuild/images
 
+recompile-dtb:
+	@echo building $@
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -c recompile_dtb
+
 bitbake-shell:
 	@echo 'PS1=$$PS1\<bitbake-shell\>$$\ ' > $(TMP_RCFILE)
 	@cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bash --rcfile $(TMP_RCFILE) -i
@@ -101,6 +106,7 @@ help:
 	@echo "  stm32flash"
 	@echo "  dsp"
 	@echo "  dsp-fast"
+	@echo "  recompile-dtb (DTB-only kernel task)"
 	@echo "  image (kernel + device tree binary + rootfs)"
 	@echo "  bitbake-shell"
 	@echo "  sdk-shell"
