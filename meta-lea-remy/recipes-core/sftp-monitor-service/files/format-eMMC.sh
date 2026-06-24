@@ -21,17 +21,9 @@ sgdisk --change-name=2:usera /dev/${EMMC}
 sgdisk --new=3::+1G /dev/${EMMC}
 sgdisk --change-name=3:userb /dev/${EMMC}
 
-# 1GB factory partition
-sgdisk --new=4::+1G /dev/${EMMC}
-sgdisk --change-name=4:factory /dev/${EMMC}
-
-# 512MB data partition (so partitions up to and including this will fit in a 4GB eMMC and room for scratch partition)
-sgdisk --new=5::+512M /dev/${EMMC}
-sgdisk --change-name=5:data /dev/${EMMC}
-
-# scratch partition in remainder of disk space
-sgdisk --new=6:: /dev/${EMMC}
-sgdisk --change-name=6:scratch /dev/${EMMC}
+# data partition in remaining space
+sgdisk --new=4:: /dev/${EMMC}
+sgdisk --change-name=4:data /dev/${EMMC}
 
 sgdisk --print /dev/${EMMC}
 
@@ -42,9 +34,7 @@ sleep 2
 mkfs.vfat -F 32 -n boot /dev/${EMMC}p1
 mkfs.ext4 -q -F -L usera /dev/${EMMC}p2
 mkfs.ext4 -q -F -L userb /dev/${EMMC}p3
-mkfs.ext4 -q -F -L factory /dev/${EMMC}p4
-mkfs.ext4 -q -F -L data /dev/${EMMC}p5
-mkfs.ext4 -q -F -L scratch /dev/${EMMC}p6
+mkfs.ext4 -q -F -L data /dev/${EMMC}p4
 
 echo "copying u-boot binaries to eMMC"
 cd /boot
@@ -56,7 +46,7 @@ sync
 
 # Also write to boot0 partition as backup
 echo '0' > /sys/class/block/${EMMC}boot0/force_ro
-dd if=/dev/zero of=/dev/${EMMC}boot0 count=32 bs=128k
+dd if=/dev/zero of=/dev/${EMMC}boot0 count=16 bs=128k
 dd if=tiboot3.bin of=/dev/${EMMC}boot0 bs=128k
 sync
 echo '1' > /sys/class/block/${EMMC}boot0/force_ro
@@ -68,6 +58,8 @@ mmc hwreset enable /dev/${EMMC}
 
 # the remaining u-boot binaries go in the FAT32 boot partition of the eMMC User Defined Area (UDA) created above
 echo "copying u-boot binaries to FAT partition"
+echo "change" > /sys/class/block/${EMMC}/uevent
+udevadm settle
 rm -rf /mnt
 mkdir -p /mnt/boot
 mount /dev/${EMMC}p1 /mnt/boot

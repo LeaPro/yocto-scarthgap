@@ -79,7 +79,11 @@ image:
 	mkdir -p ${BUILD_DIR}/postBuild/images
 	@cp $(BUILD_DIR)/deploy-ti/images/lea-remy/core-image-minimal-lea-remy.rootfs.tar.xz ${BUILD_DIR}/postBuild/images
 
-recompile-dtb:
+kernel:
+	@echo building $@
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake virtual/kernel -c cleansstate && bitbake virtual/kernel
+
+dtb:
 	@echo building $@
 	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -c recompile_dtb
 
@@ -106,7 +110,8 @@ help:
 	@echo "  stm32flash"
 	@echo "  dsp"
 	@echo "  dsp-fast"
-	@echo "  recompile-dtb (DTB-only kernel task)"
 	@echo "  image (kernel + device tree binary + rootfs)"
+	@echo "  kernel (clean sstate-cache and rebuild kernel)"
+	@echo "  dtb (DTB-only kernel task)"
 	@echo "  bitbake-shell"
 	@echo "  sdk-shell"
