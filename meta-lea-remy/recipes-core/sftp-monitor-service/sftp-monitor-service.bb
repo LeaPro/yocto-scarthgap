@@ -8,6 +8,7 @@ RDEPENDS:${PN} += "bash"
 SRC_URI =  " \
     file://sftp-monitor.service \
     file://sftp-monitor.sh \
+    file://rtc-sync.service \
     file://format-eMMC.sh \
     file://tiboot3.bin \
     file://tispl.bin \
@@ -39,11 +40,12 @@ do_install () {
 
     install -d ${D}${systemd_unitdir}/system/
     install -m 0644 ${WORKDIR}/sftp-monitor.service ${D}${systemd_unitdir}/system
+    install -m 0644 ${WORKDIR}/rtc-sync.service ${D}${systemd_unitdir}/system
 }
 
 NATIVE_SYSTEMD_SUPPORT = "1"
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE:${PN} = "sftp-monitor.service"
+SYSTEMD_SERVICE:${PN} = "sftp-monitor.service rtc-sync.service"
 
 inherit allarch systemd
 
