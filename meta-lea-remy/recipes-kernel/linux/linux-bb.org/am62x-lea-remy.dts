@@ -136,7 +136,12 @@
 			 <3300000 0x1>;
 	};
 
-	leds {
+	emmc_pwrseq: emmc-pwrseq {
+		compatible = "mmc-pwrseq-emmc";
+		reset-gpios = <&main_gpio0 16 GPIO_ACTIVE_LOW>;
+	};
+
+ 	leds {
 		bootph-all;
 		compatible = "gpio-leds";
 
@@ -190,7 +195,6 @@
 	gpio0_pins_default: gpio0-default-pins {
 		bootph-all;
 		pinctrl-single,pins = <
-			AM62X_IOPAD(0x0000, PIN_OUTPUT, 7) /* (H24) OSPI0_CLK.GPIO0_0 (eMMC_RSTn) */
 			AM62X_IOPAD(0x0004, PIN_INPUT, 7) /* (G25) OSPI0_LBCLKO.GPIO0_1 (FPGA_RSTn) */
 			AM62X_IOPAD(0x0008, PIN_INPUT, 7) /* (J24) OSPI0_DQS.GPIO0_2 (RTC_INTn?) */
 			AM62X_IOPAD(0x000c, PIN_OUTPUT, 7) /* (E25) OSPI0_D0.GPIO0_3 (LED0) */
@@ -203,6 +207,7 @@
 			AM62X_IOPAD(0x0030, PIN_INPUT, 7) /* (G21) OSPI0_CSn1.GPIO0_12 (SIG_RSTn)*/
 			AM62X_IOPAD(0x0034, PIN_INPUT, 7) /* (H21) OSPI0_CSn2.GPIO0_13 (DSP1-3_SPI1_CS1n) */
 			AM62X_IOPAD(0x0038, PIN_INPUT, 7) /* (E24) OSPI0_CSn3.GPIO0_14 (SHARC_SIGMA_SPI_SELECT) */
+			AM62X_IOPAD(0x0040, PIN_OUTPUT, 7) /* (N23) GPMC0_AD1.GPIO0_16 (eMMC_RSTn) */
 			AM62X_IOPAD(0x00a4, PIN_INPUT, 7) /* (M22) GPMC0_DIR.GPIO0_40 (FPGA_PWR_DISABLEn) */
 			AM62X_IOPAD(0x00ac, PIN_INPUT, 7) /* (L21) GPMC0_CSn1.GPIO0_42 (SHARC2_SPI0_RDY) */
 		>;
@@ -647,6 +652,8 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&emmc_pins_default>;
 	disable-wp;
+	non-removable;
+	mmc-pwrseq = <&emmc_pwrseq>;
 	status = "okay";
 };
 
