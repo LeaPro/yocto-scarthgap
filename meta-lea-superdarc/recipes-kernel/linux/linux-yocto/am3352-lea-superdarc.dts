@@ -426,6 +426,9 @@
  status = "okay";
 	ethphy0: ethernet-phy@0 {
 		reg = <0>;
+		reset-gpios = <&gpio1 27 GPIO_ACTIVE_LOW>;
+		reset-assert-us = <25000>;
+		reset-deassert-us = <25000>;
 	};
 };
 
