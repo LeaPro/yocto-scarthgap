@@ -16,19 +16,42 @@ RUN apt-get update && apt-get install -y gawk wget git-core diffstat zip unzip t
     python3-pip python3-pexpect python3-yaml python3-jsonschema yamllint xz-utils debianutils debconf-utils iputils-ping \
     libsdl1.2-dev xterm tar locales net-tools rsync sudo vim curl zstd \
     liblz4-tool libssl-dev bc lzop libgnutls28-dev efitools git-lfs \
-    gdb xxd tmux libncurses-dev
+    libglib2.0-0 libxext6 libxtst6 \
+    libxft2 libxrender1 libxi6 libsm6 libice6 libfontconfig1 libfreetype6 libdbus-1-3 libnss3 \
+    gdb xxd tmux libncurses-dev xvfb xauth
 
 RUN pip3 install numpy
 RUN pip3 install websockets
 RUN pip3 install pyelftools
 RUN pip3 install cryptography
 RUN python3 -c "import yaml, jsonschema"
-    
-# Set up locales
+
+# Set up locales before running the Quartus installer; the installer uses
+# en_US.UTF-8 during startup.
 RUN locale-gen en_US.UTF-8 && \
     update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
+
+# Install Quartus Prime Lite 25.1 in a fixed location so the toolchain is
+# available directly inside the image.
+COPY qinst-lite-linux-25.1std-1129.run /opt/
+RUN mkdir -p /tmp/quartus-downloads /tmp/quartus-installer /opt/intelFPGA_lite && \
+    chmod +x /opt/qinst-lite-linux-25.1std-1129.run && \
+    /opt/qinst-lite-linux-25.1std-1129.run --nox11 --accept --noexec --target /tmp/quartus-installer && \
+    xvfb-run -a /tmp/quartus-installer/qinst.sh --cli \
+        --download-dir /tmp/quartus-downloads \
+        --install-dir /opt/intelFPGA_lite/25.1std \
+        --accept-eula \
+        --auto-install \
+        --bypass \
+        --delete-downloads \
+        --components quartus,max10 && \
+    rm -rf /tmp/quartus-downloads /tmp/quartus-installer /opt/qinst-lite-linux-25.1std-1129.run
+
+ENV QUARTUS_ROOTDIR=/opt/intelFPGA_lite/25.1std/quartus
+ENV QSYS_ROOTDIR=/opt/intelFPGA_lite/25.1std/quartus/sopc_builder/bin
+ENV PATH="/opt/intelFPGA_lite/25.1std/quartus/bin:/opt/intelFPGA_lite/25.1std/quartus/sopc_builder/bin:/opt/intelFPGA_lite/25.1std/questa_fse/linux_x86_64:$PATH"
 
 # recent versions of arm-none-eabi-gcc must be installed manually (thanks a lot, ARM!)
 COPY arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi.tar.xz /opt
