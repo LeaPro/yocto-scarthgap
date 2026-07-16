@@ -20,7 +20,17 @@ TOOLCHAIN_SETUP:=$(realpath ${SDK_SETUP_DIR}/environment-setup-aarch64-poky-linu
 
 TMP_RCFILE:=$(shell mktemp)
 
-all: u-boot application-server kvsTool ipcTool stm32flash dsp image
+SUBDIR_TARGETS:=application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP
+ACTIVE_SUBDIR_TARGET:=$(firstword $(filter $(SUBDIR_TARGETS),$(MAKECMDGOALS)))
+EXTRA_SUBDIR_GOALS:=$(if $(ACTIVE_SUBDIR_TARGET),$(filter-out $(ACTIVE_SUBDIR_TARGET),$(MAKECMDGOALS)),)
+
+ifneq ($(EXTRA_SUBDIR_GOALS),)
+.PHONY: $(EXTRA_SUBDIR_GOALS)
+$(EXTRA_SUBDIR_GOALS):
+	@:
+endif
+
+all: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image
 
 sdk: $(SDK_SETUP_TARGET)
 
@@ -44,31 +54,46 @@ u-boot:
 
 application-server:
 	@echo building $@
-	@source ${TOOLCHAIN_SETUP} && make --directory=${REMY_DIR}/application-server $(MAKEFLAGS)
-	@cp --update ${REMY_DIR}/application-server/obj/application-server ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${REMY_DIR}/application-server $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/application-server/obj/application-server ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
+
+gpioTool:
+	@echo building $@
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${REMY_DIR}/application-server/$@ $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/application-server/$@/obj/$@ ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
+
+fpgaTool:
+	@echo building $@
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${REMY_DIR}/application-server/$@ $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/application-server/$@/obj/$@ ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
 kvsTool:
 	@echo building $@
-	@source ${TOOLCHAIN_SETUP} && make --directory=${WEBSOCKETAPI_DIR}/kvsTool $(MAKEFLAGS)
-	@cp --update ${WEBSOCKETAPI_DIR}/kvsTool/obj/kvsTool ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/kvsTool $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${WEBSOCKETAPI_DIR}/kvsTool/obj/kvsTool ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
 ipcTool:
 	@echo building $@
-	@source ${TOOLCHAIN_SETUP} && make --directory=${WEBSOCKETAPI_DIR}/ipcTool $(MAKEFLAGS)
-	@cp --update ${WEBSOCKETAPI_DIR}/ipcTool/obj/ipcTool ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/ipcTool $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${WEBSOCKETAPI_DIR}/ipcTool/obj/ipcTool ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
 stm32flash:
 	@echo building $@
-	@source ${TOOLCHAIN_SETUP} && make --directory=${WEBSOCKETAPI_DIR}/stm32flash $(MAKEFLAGS)
-	@cp --update ${WEBSOCKETAPI_DIR}/stm32flash/stm32flash ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/stm32flash $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${WEBSOCKETAPI_DIR}/stm32flash/stm32flash ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
-dsp:
+FPGA:
+	@echo building $@
+	@$(MAKE) --directory=${REMY_DIR}/$@ $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/$@/output_files/remy_pof.svf ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
+
+DSP:
 	@echo building $@
 	# note:  on linux cces returns bogus exit code 4 when the build succeeds but 'Failed to regenerate sources' due to a hard-coded check for the Windows-specific file, SourceGen.exe
 	cd ${FIX_ME} && ( /opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/workspace -project ${FIX_ME} -regensrc -cleanBuild Release-Linux || [ $$? -eq 4 ] )
 	@cp --update FULL_PATH_TO_REMY_DSP.ldr ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
 
-dsp-fast:
+DSP-fast:
 	@echo building $@
 	cd .${FIX_ME} && //opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/workspace -project ${FIX_ME} -build Release-Linux
 	@cp --update FULL_PATH_TO_REMY_DSP.ldr  ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
@@ -105,11 +130,14 @@ help:
 	@echo "  sdk"
 	@echo "  u-boot"
 	@echo "  application-server"
+	@echo "  gpioTool"
+	@echo "  fpgaTool"
 	@echo "  kvsTool"
 	@echo "  ipcTool"
 	@echo "  stm32flash"
-	@echo "  dsp"
-	@echo "  dsp-fast"
+	@echo "  FPGA"
+	@echo "  DSP"
+	@echo "  DSP-fast"
 	@echo "  image (kernel + device tree binary + rootfs)"
 	@echo "  kernel (clean sstate-cache and rebuild kernel)"
 	@echo "  dtb (DTB-only kernel task)"
