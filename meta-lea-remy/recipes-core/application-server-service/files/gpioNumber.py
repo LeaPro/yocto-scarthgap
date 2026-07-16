@@ -11,7 +11,7 @@ def get_gpio_number(port: str, pin: int) -> int:
     am62x_mapping = {
         "GPIO0": "600000.gpio",
         "GPIO1": "601000.gpio",
-        "MCU_GPIO0": "408000.gpio"
+        "MCU_GPIO0": "4201000.gpio"
     }
     
     target_label = am62x_mapping.get(port.upper())
