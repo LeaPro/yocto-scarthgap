@@ -20,6 +20,15 @@ TOOLCHAIN_SETUP:=$(realpath ${SDK_SETUP_DIR}/environment-setup-aarch64-poky-linu
 
 TMP_RCFILE:=$(shell mktemp)
 
+REQUESTED_GOALS:=$(if $(MAKECMDGOALS),$(MAKECMDGOALS),all)
+HOST_SAFE_GOALS:=help print-%
+
+ifneq ($(filter-out $(HOST_SAFE_GOALS),$(REQUESTED_GOALS)),)
+ifeq ($(LEA_YOCTO_SCARTHGAP_CONTAINER),)
+$(error This Makefile must be run inside the Docker container. Use ./docker-run first)
+endif
+endif
+
 SUBDIR_TARGETS:=application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP
 ACTIVE_SUBDIR_TARGET:=$(firstword $(filter $(SUBDIR_TARGETS),$(MAKECMDGOALS)))
 EXTRA_SUBDIR_GOALS:=$(if $(ACTIVE_SUBDIR_TARGET),$(filter-out $(ACTIVE_SUBDIR_TARGET),$(MAKECMDGOALS)),)
@@ -30,7 +39,8 @@ $(EXTRA_SUBDIR_GOALS):
 	@:
 endif
 
-all: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image
+all: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA image
+#all: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image
 
 sdk: $(SDK_SETUP_TARGET)
 
@@ -84,7 +94,7 @@ stm32flash:
 
 FPGA:
 	@echo building $@
-	@$(MAKE) --directory=${REMY_DIR}/$@ $(EXTRA_SUBDIR_GOALS)
+	@PATH=$(QUARTUS_PATH):$$PATH && $(MAKE) --directory=${REMY_DIR}/$@ $(EXTRA_SUBDIR_GOALS)
 	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/$@/output_files/remy_pof.svf ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
 DSP:
@@ -106,11 +116,11 @@ image:
 
 kernel:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake virtual/kernel -c cleansstate && bitbake virtual/kernel
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -c cleansstate && bitbake $(KERNEL_RECIPE)
 
 dtb:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -c recompile_dtb
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c recompile_dtb
 
 bitbake-shell:
 	@echo 'PS1=$$PS1\<bitbake-shell\>$$\ ' > $(TMP_RCFILE)

@@ -64,11 +64,16 @@ poky/bitbake/lib/bb/pysh/pyshtables\.py
 /**/application-server-service/files/stm32flash
 /**/application-server-service/files/ipcTool
 /**/application-server-service/files/kvsTool
+/**/application-server-service/files/fpgaTool
+/**/application-server-service/files/gpioTool
+/**/application-server-service/files/remy_pof.svf
 /**/application-server-service/files/*.zip
 /**/cloud-proxy-service/files/cloud-proxy
 /**/leatcp-proxy-service/files/leatcp-proxy
 /**/sftp-monitor-service/files/MLO
 /**/sftp-monitor-service/files/u-boot.img
+/**/sftp-monitor-service/files/tiboot3.bin
+/**/sftp-monitor-service/files/tispl.bin
 
 # web UI
 web-ui-*/
@@ -95,6 +100,7 @@ meta-lea-supershark/recipes-core/application-server-service/files/SuperDARC.ldr
 **/toolchainSetup
 
 docker/license.dat
+docker/*.tar
 
 build-*/workspace/
 build-*/downloads/
@@ -103,14 +109,5 @@ build-*/conf/templateconf.cfg
 build-*/conf/conf-notes.txt
 build-*/conf/conf-summary.txt
 
-meta-lea-remy/recipes-core/sftp-monitor-service/files/tiboot3.bin
-
-meta-lea-remy/recipes-core/sftp-monitor-service/files/tispl.bin
-
 build-remy/postBuild/sdcard.img
 
-meta-lea-remy/recipes-core/application-server-service/files/fpgaTool
-
-meta-lea-remy/recipes-core/application-server-service/files/gpioTool
-
-meta-lea-remy/recipes-core/application-server-service/files/remy_pof.svf

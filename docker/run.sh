@@ -5,32 +5,35 @@
 
 SCRIPT_PATH=$(readlink -f "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
-YOCTO_DIR=$(realpath $SCRIPT_DIR/..)
+YOCTO_DIR=$(realpath "$SCRIPT_DIR/..")
 DOCKER_IMAGE_TAG=lea-yocto-scarthgap
+BUILD_DIR=${BUILD_DIR:-${PWD}}
+YOCTO_DOWNLOADS_VOLUME=()
+YOCTO_SSTATE_VOLUME=()
 
-if [[ ${@} ]]; then
-  DOCKER_RUN_COMMAND="$1"
-  shift
-  DOCKER_RUN_ARGS=${@}
+if [[ $# -gt 0 ]]; then
+  DOCKER_RUN_COMMAND=("$@")
+else
+  DOCKER_RUN_COMMAND=(bash)
 fi
 
 # to conserve disk space, support symlinks to shared downloads and sstate-cache directories
-YOCTO_DOWNLOADS_LINK=$(find ${BUILD_DIR} -maxdepth 1 -type l -name downloads)
+YOCTO_DOWNLOADS_LINK=$(find "${BUILD_DIR}" -maxdepth 1 -type l -name downloads)
 if [[ ${YOCTO_DOWNLOADS_LINK} ]]; then
-  YOCTO_DOWNLOADS_TARGET=$(realpath ${YOCTO_DOWNLOADS_LINK})
-  YOCTO_DOWNLOADS_VOLUME="--volume ${YOCTO_DOWNLOADS_TARGET}:${YOCTO_DOWNLOADS_TARGET}"
+  YOCTO_DOWNLOADS_TARGET=$(realpath "${YOCTO_DOWNLOADS_LINK}")
+  YOCTO_DOWNLOADS_VOLUME=(--volume "${YOCTO_DOWNLOADS_TARGET}:${YOCTO_DOWNLOADS_TARGET}")
 fi
-YOCTO_SSTATE_LINK=$(find ${BUILD_DIR} -maxdepth 1 -type l -name sstate-cache)
+YOCTO_SSTATE_LINK=$(find "${BUILD_DIR}" -maxdepth 1 -type l -name sstate-cache)
 if [[ ${YOCTO_SSTATE_LINK} ]]; then
-  YOCTO_SSTATE_TARGET=$(realpath ${YOCTO_SSTATE_LINK})
-  YOCTO_SSTATE_VOLUME="--volume ${YOCTO_SSTATE_TARGET}:${YOCTO_SSTATE_TARGET}"
+  YOCTO_SSTATE_TARGET=$(realpath "${YOCTO_SSTATE_LINK}")
+  YOCTO_SSTATE_VOLUME=(--volume "${YOCTO_SSTATE_TARGET}:${YOCTO_SSTATE_TARGET}")
 fi
 
 # CCES license file asumed to be in user's home directory at ~/.analog/cces/license.dat
 # MAC address below must match the one in the license file
 docker run -it --security-opt seccomp=unconfined --rm \
-  --workdir ${PWD} \
+  --workdir "${PWD}" \
   --mac-address="a4:4c:c8:29:84:c4" \
-  --volume ${HOME}:${HOME} --volume ${YOCTO_DIR}:${YOCTO_DIR} ${YOCTO_DOWNLOADS_VOLUME} ${YOCTO_SSTATE_VOLUME} \
+  --volume "${HOME}:${HOME}" --volume "${YOCTO_DIR}:${YOCTO_DIR}" "${YOCTO_DOWNLOADS_VOLUME[@]}" "${YOCTO_SSTATE_VOLUME[@]}" \
   "${DOCKER_IMAGE_TAG}" \
-  ${DOCKER_RUN_COMMAND} ${DOCKER_RUN_ARGS}
+  "${DOCKER_RUN_COMMAND[@]}"
