@@ -13,7 +13,7 @@ KERNEL_RECIPE=virtual/kernel
 SDK_SETUP_DIR:=$(realpath $(BUILD_DIR)/..)/sdk/remy
 SDK_SETUP_TARGET:=$(SDK_SETUP_DIR)/.dummy-target
 
-SDK_INSTALLER_DIR:=$(realpath $(BUILD_DIR))/tmp/deploy/sdk
+SDK_INSTALLER_DIR:=$(realpath $(BUILD_DIR))/deploy-ti/sdk
 SDK_INSTALLER_ARCHIVE:=$(BUILD_DIR)/sdk-installer.tar.bz2
 
 TOOLCHAIN_SETUP:=$(realpath ${SDK_SETUP_DIR}/environment-setup-aarch64-poky-linux)
@@ -53,7 +53,7 @@ $(SDK_INSTALLER_ARCHIVE):
 	export DISABLE_CUSTOM_SERVICE_BINARIES=1 && \
 	export BB_ENV_PASSTHROUGH_ADDITIONS="$$BB_ENV_PASSTHROUGH_ADDITIONS DISABLE_CUSTOM_SERVICE_BINARIES" && \
 	source poky/oe-init-build-env $(BUILD_DIR) && \
-	DISABLE_CUSTOM_SERVICE_BINARIES=1 bitbake $(YOCTO_IMAGE) -f -c populate_sdk && \
+	DISABLE_CUSTOM_SERVICE_BINARIES=1 bitbake $(YOCTO_IMAGE) -c populate_sdk && \
 	cd $(SDK_INSTALLER_DIR) && \
 	tar -cjf $(SDK_INSTALLER_ARCHIVE) --exclude=*.tar.bz2 *
 
