@@ -16,7 +16,7 @@ SDK_SETUP_TARGET:=$(SDK_SETUP_DIR)/.dummy-target
 SDK_INSTALLER_DIR:=$(realpath $(BUILD_DIR))/deploy-ti/sdk
 SDK_INSTALLER_ARCHIVE:=$(BUILD_DIR)/sdk-installer.tar.bz2
 
-TOOLCHAIN_SETUP:=$(realpath ${SDK_SETUP_DIR}/environment-setup-aarch64-poky-linux)
+TOOLCHAIN_SETUP:=$(realpath ${SDK_SETUP_DIR}/environment-setup-aarch64-oe-linux)
 
 TMP_RCFILE:=$(shell mktemp)
 
