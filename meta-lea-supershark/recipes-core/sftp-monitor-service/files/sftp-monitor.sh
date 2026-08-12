@@ -11,6 +11,8 @@
 SFTP_DIR=/var/tmp/sftp
 mkdir -p $SFTP_DIR
 rm -rf $SFTP_DIR/*
+FW_KEY="${FW_KEY:-SSSS}"
+FILE_PREFIX="${FILE_PREFIX:-SS}"
 
 while [ 1 = 1 ] ; do
   unset IFS
@@ -21,11 +23,18 @@ while [ 1 = 1 ] ; do
     pushd $DIR
     # f/w updates require a tar.xz archive encrypted with openssl
     if [[ $FILE == *tar.xz.enc ]] ; then
+      if [[ ${FILE:0:2} != "$FILE_PREFIX" ]] ; then
+        echo "filename prefix mismatch for $FILE"
+        ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"DecryptingFail"}' || true
+        rm $FILE
+        sleep 5
+        continue
+      fi
       TARBALL=${FILE%.*}
       echo "decrypting"
       ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"Decrypting"}' || true
-      openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k SSSS
-      # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k SSSS
+      openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k "$FW_KEY"
+      # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k "$FW_KEY"
       if [[ $? = 0 ]] ; then
         # Block firmware updates when running on PoE
         POWER_SOURCE=""
