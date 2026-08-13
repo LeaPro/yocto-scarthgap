@@ -25,7 +25,7 @@ while [ 1 = 1 ] ; do
     if [[ $FILE == *tar.xz.enc ]] ; then
       if [[ ${FILE:0:4} != "$FILE_PREFIX" ]] ; then
         echo "filename prefix mismatch for $FILE"
-        touch /usr/sbin/decryptingFail
+        touch /usr/sbin/decryptFailed
         rm $FILE
         sleep 5
         continue
