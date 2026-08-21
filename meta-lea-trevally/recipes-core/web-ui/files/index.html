@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LEA Trevally Upload Test UI</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; line-height: 1.4; }
+    main { max-width: 52rem; }
+    .box { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; }
+    code { background: #f3f3f3; padding: 0.1rem 0.3rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Trevally Web UI Placeholder</h1>
+    <p>This temporary page is for testing the Perl CGI upload endpoint.</p>
+
+    <div class="box">
+      <h2>Upload Test</h2>
+      <form action="/cgi-bin/upload.cgi" method="post" enctype="multipart/form-data">
+        <p>
+          <label for="filename">Select file:</label>
+          <input id="filename" name="filename" type="file" required>
+        </p>
+        <p>
+          <label for="category">Category:</label>
+          <select id="category" name="category">
+            <option value="misc-files" selected>misc-files</option>
+            <option value="firmware-update">firmware-update</option>
+            <option value="audio-files">audio-files</option>
+            <option value="image-files">image-files</option>
+          </select>
+        </p>
+        <p>
+          <label for="metadata_json">Optional JSON metadata:</label><br>
+          <textarea id="metadata_json" name="metadata_json" rows="8" cols="72" placeholder='{"source":"qa","ticket":"ABC-123"}'></textarea>
+        </p>
+        <p>
+          <button type="submit">Upload</button>
+        </p>
+      </form>
+    </div>
+
+    <p>
+      Target endpoint: <code>/cgi-bin/upload.cgi</code>
+    </p>
+  </main>
+</body>
+</html>

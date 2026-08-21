@@ -1,13 +1,13 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI:append:lea-remy = " \
-	file://am62x-lea-remy.dts;subdir=git/arch/arm64/boot/dts/ti \
-	file://k3-am625-remy-pinmux.dtsi;subdir=git/arch/arm64/boot/dts/ti \
+SRC_URI:append:lea-trevally = " \
+	file://am62x-lea-trevally.dts;subdir=git/arch/arm64/boot/dts/ti \
+	file://k3-am625-trevally-pinmux.dtsi;subdir=git/arch/arm64/boot/dts/ti \
 	file://disable-audit.cfg \
 	"
 # file://0001-mfd-tps65219-restart-handler-high-priority.patch
 
-COMPATIBLE_MACHINE:lea-remy = "lea-remy"
+COMPATIBLE_MACHINE:lea-trevally = "lea-trevally"
 
 do_rebuild_dtb() {
 	oe_runmake -C ${B} ${KERNEL_DEVICETREE}

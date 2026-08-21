@@ -1,5 +1,5 @@
 SHELL:=/bin/bash
-.PHONY: help sdk recompile-dtb
+.PHONY: help sdk
 
 BUILD_DIR=$(realpath .)
 LEA_DIR=$(realpath ../..)
@@ -108,7 +108,7 @@ DSP-fast:
 	cd .${FIX_ME} && //opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/workspace -project ${FIX_ME} -build Release-Linux
 	@cp --update FULL_PATH_TO_REMY_DSP.ldr  ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
 
-image:
+image: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP
 	@echo building $@
 	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(YOCTO_IMAGE)
 	mkdir -p ${BUILD_DIR}/postBuild/images
@@ -120,7 +120,7 @@ kernel:
 
 dtb:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c recompile_dtb
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c rebuild_dtb
 
 bitbake-shell:
 	@echo 'PS1=$$PS1\<bitbake-shell\>$$\ ' > $(TMP_RCFILE)

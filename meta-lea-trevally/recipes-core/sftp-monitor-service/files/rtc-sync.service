@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync system clock to RTC after NTP
+After=time-sync.target
+Wants=time-sync.target
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hwclock --systohc --rtc=/dev/rtc0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

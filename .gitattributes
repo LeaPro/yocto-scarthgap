@@ -10,3 +10,4 @@ meta-lea-remy/recipes-core/sftp-monitor-service/files/tiboot3.bin filter=lfs dif
 meta-lea-remy/recipes-core/sftp-monitor-service/files/tispl.bin filter=lfs diff=lfs merge=lfs -text
 docker/qinst-lite-linux-25.1std-1129.run filter=lfs diff=lfs merge=lfs -text
 build-remy/sdk-installer.tar.bz2 filter=lfs diff=lfs merge=lfs -text
+build-trevally/sdk-installer.tar.bz2 filter=lfs diff=lfs merge=lfs -text

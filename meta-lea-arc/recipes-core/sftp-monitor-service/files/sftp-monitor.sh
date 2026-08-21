@@ -6,7 +6,7 @@
 #      - toggle eMMC a/b partition
 #      - reboot
 # 4 - continously monitor SFTP directory for 802.1X certificate upload
-#     when found, copy to /mnt/data/certs
+#     when found, copy to /mnt/data/uploaded-certs
 
 SFTP_DIR=/var/tmp/sftp
 mkdir -p $SFTP_DIR
