@@ -39,6 +39,7 @@
 		<&main_pmx0_range 0 32 PIN_GPIO_RANGE_IOPAD>,
 		<&main_pmx0_range 33 38 PIN_GPIO_RANGE_IOPAD>,
 		<&main_pmx0_range 72 22 PIN_GPIO_RANGE_IOPAD>,
+		<&main_pmx0_range 122 2 PIN_GPIO_RANGE_IOPAD>,
 		<&main_pmx0_range 137 5 PIN_GPIO_RANGE_IOPAD>,
 		<&main_pmx0_range 143 3 PIN_GPIO_RANGE_IOPAD>,
 		<&main_pmx0_range 149 2 PIN_GPIO_RANGE_IOPAD>;

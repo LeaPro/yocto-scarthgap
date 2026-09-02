@@ -32,51 +32,52 @@ while [ 1 = 1 ] ; do
       if [[ $? = 0 ]] ; then
         #rm $FILE
         # format eMMC if we're not running from it
+        FORMATTED_EMMC=0
         mount | grep -e "${EMMC}.* on /"
         if [[ $? != 0 ]] ; then
           /bin/sh -c "$(dirname "$0")/format-eMMC.sh"
+          FORMATTED_EMMC=1
         fi
         set -e # exit on error
-        IFS='='
-        fw_printenv emmcpart |
-        while read FOO EMMCPART ; do
-          if [[ $EMMCPART = 2 ]] ; then
+        if [[ $FORMATTED_EMMC = 1 ]] ; then
+          EMMCPART=2
+        else
+          CURRENT_PART="$(fw_printenv -n emmcpart 2>/dev/null || true)"
+          if [[ $CURRENT_PART = 2 ]] ; then
             EMMCPART=3
           else
             EMMCPART=2
           fi
-          PART="/dev/${EMMC}p$EMMCPART"
-          echo "extracting $TARBALL into $PART"
-          mkdir -p /mnt/rootfs
-          mount $PART /mnt/rootfs
-          export EXTRACT_UNSAFE_SYMLINKS=1
-          rm -rf /mnt/rootfs/*
-          tar xpf $TARBALL -C /mnt/rootfs
-          sync
-          echo 0 > /sys/block/${EMMC}boot1/force_ro # required to write u-boot env vars
-          fw_setenv emmcpart $EMMCPART
-          echo "extraction complete"
-          sleep 2
-          rm $TARBALL
-          set +e # don't exit on non-zero return code
+        fi
+        PART="/dev/${EMMC}p$EMMCPART"
+        echo "extracting $TARBALL into $PART"
+        mkdir -p /mnt/rootfs
+        mount $PART /mnt/rootfs
+        export EXTRACT_UNSAFE_SYMLINKS=1
+        rm -rf /mnt/rootfs/*
+        tar xpf $TARBALL -C /mnt/rootfs
+        sync
+        echo 0 > /sys/block/${EMMC}boot1/force_ro # required to write u-boot env vars
+        fw_setenv emmcpart $EMMCPART
+        echo "extraction complete"
+        sleep 2
+        rm -f -- "$TARBALL"
+        set +e # don't exit on non-zero return code
+        systemctl stop application-server
+        while [[ true ]] ; do
+          systemctl is-active application-server
+          if [[ $? = 0 ]] ; then
+            sleep 1
+          else
+            break 1
+          fi 
           systemctl stop application-server
-          while [[ true ]] ; do
-            systemctl is-active application-server
-            if [[ $? = 0 ]] ; then
-              sleep 1
-            else
-              break 1
-            fi 
-            systemctl stop application-server
-          done
-          set -e # exit on error
-          cd ~
-          umount /mnt/rootfs
-          sleep 1
-          reboot
         done
-        rm $TARBALL
-        set +e
+        set -e # exit on error
+        cd ~
+        umount /mnt/rootfs
+        sleep 1
+        reboot
       else
         echo "decrypt failed"
         sleep 5
@@ -95,7 +96,7 @@ while [ 1 = 1 ] ; do
       echo "unsupported file type"
         sleep 5
     fi
-    rm $FILE
+    rm -f -- "$FILE"
     popd
   done
 done

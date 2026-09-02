@@ -695,7 +695,6 @@
 };
 
 &main_uart1 {
-	/* Main UART1 is used by TIFS firmware */
 	status = "reserved";
 };
 

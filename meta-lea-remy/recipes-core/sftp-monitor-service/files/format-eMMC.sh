@@ -36,6 +36,9 @@ mkfs.ext4 -q -F -L usera /dev/${EMMC}p2
 mkfs.ext4 -q -F -L userb /dev/${EMMC}p3
 mkfs.ext4 -q -F -L data /dev/${EMMC}p4
 
+echo "clearing u-boot environment in eMMC"
+dd if=/dev/zero of=/dev/${EMMC}boot1 bs=1 seek=$((0x0)) count=$((0x40000))
+
 echo "copying u-boot binaries to eMMC"
 cd /boot
 

@@ -16,7 +16,7 @@ ENV LEA_YOCTO_SCARTHGAP_CONTAINER=1
 RUN apt-get update && apt-get install -y gawk wget git-core diffstat zip unzip texinfo \
     build-essential crossbuild-essential-arm64 crossbuild-essential-armhf chrpath socat file cpio python3 \
     python3-pip python3-pexpect python3-yaml python3-jsonschema yamllint xz-utils debianutils debconf-utils iputils-ping \
-    libsdl1.2-dev xterm tar=1.34+dfsg-1ubuntu0.1.22.04.2 locales net-tools rsync sudo vim curl zstd \
+    libsdl1.2-dev xterm tar locales net-tools rsync sudo vim curl zstd \
     liblz4-tool libssl-dev bc lzop libgnutls28-dev efitools git-lfs \
     libglib2.0-0 libxext6 libxtst6 \
     libxft2 libxrender1 libxi6 libsm6 libice6 libfontconfig1 libfreetype6 libdbus-1-3 libnss3 \

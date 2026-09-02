@@ -1,5 +1,5 @@
 SHELL:=/bin/bash
-.PHONY: help sdk
+.PHONY: help sdk image image-quick
 
 BUILD_DIR=$(realpath .)
 LEA_DIR=$(realpath ../..)
@@ -81,11 +81,13 @@ ipcTool:
 	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/ipcTool $(EXTRA_SUBDIR_GOALS)
 	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${WEBSOCKETAPI_DIR}/ipcTool/obj/ipcTool ${YOCTO_DIR}/meta-lea-trevally/recipes-core/application-server-service/files; fi
 
-image: u-boot application-server gpioTool kvsTool ipcTool
+image-quick:
 	@echo building $@
 	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(YOCTO_IMAGE)
 	mkdir -p ${BUILD_DIR}/postBuild/images
 	@cp $(BUILD_DIR)/deploy-ti/images/lea-trevally/core-image-minimal-lea-trevally.rootfs.tar.xz ${BUILD_DIR}/postBuild/images
+
+image: u-boot application-server gpioTool kvsTool ipcTool image-quick
 
 kernel:
 	@echo building $@
