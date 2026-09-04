@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y gawk wget git-core diffstat zip unzip t
     liblz4-tool libssl-dev bc lzop libgnutls28-dev efitools git-lfs \
     libglib2.0-0 libxext6 libxtst6 \
     libxft2 libxrender1 libxi6 libsm6 libice6 libfontconfig1 libfreetype6 libdbus-1-3 libnss3 \
-    gdb xxd tmux libncurses-dev xvfb xauth bison flex
+    gdb xxd tmux libncurses-dev xvfb xauth bison flex swig
 
 # inside the container,record the list of installed packages and their versions for reference
 # dpkg-query -W -f='${Package}\t${Version}\n' | sort > package-manifest.txt
