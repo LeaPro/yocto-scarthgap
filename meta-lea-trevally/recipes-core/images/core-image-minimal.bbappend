@@ -22,3 +22,14 @@ move_dtb_to_boot() {
     rmdir --ignore-fail-on-non-empty ${IMAGE_ROOTFS}/boot/dtb/ti 2>/dev/null || true
     rmdir --ignore-fail-on-non-empty ${IMAGE_ROOTFS}/boot/dtb 2>/dev/null || true
 }
+
+# Trevally Bluetooth audio sink stack.
+IMAGE_INSTALL:append:lea-trevally = " \
+    bluez5 \
+    bluez5-noinst-tools \
+    bluealsa \
+    bluealsa-aplay \
+    alsa-plugins \
+    linux-firmware-nxpiw612-sdio \
+    nxp-bt-config \
+"

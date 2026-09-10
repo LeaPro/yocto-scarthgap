@@ -91,7 +91,7 @@ image: u-boot application-server gpioTool kvsTool ipcTool image-quick
 
 kernel:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -c cleansstate && bitbake $(KERNEL_RECIPE)
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE)
 
 dtb:
 	@echo building $@
@@ -119,7 +119,7 @@ help:
 	@echo "  kvsTool"
 	@echo "  ipcTool"
 	@echo "  image (kernel + device tree binary + rootfs)"
-	@echo "  kernel (clean sstate-cache and rebuild kernel)"
+	@echo "  kernel (incremental kernel build)"
 	@echo "  dtb (DTB-only kernel task)"
 	@echo "  bitbake-shell"
 	@echo "  sdk-shell"
