@@ -1,0 +1,14 @@
+[Unit]
+Description=Prepare persistent Bluetooth bond store
+Before=bluetooth.service
+After=local-fs.target
+Wants=local-fs.target
+ConditionPathExists=/dev/disk/by-label/data
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/trevally-bluetooth-persist.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -18,7 +18,6 @@ do_rebuild_dtb() {
 	bbplain "DTB rebuilt at: ${B}/arch/arm64/boot/dts/${KERNEL_DEVICETREE}"
 }
 
-addtask rebuild_dtb after do_configure before do_compile
+addtask rebuild_dtb after do_configure
 
 do_rebuild_dtb[dirs] = "${B}"
-do_rebuild_dtb[nostamp] = "1"

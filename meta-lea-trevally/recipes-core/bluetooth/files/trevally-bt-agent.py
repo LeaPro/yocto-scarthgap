@@ -9,6 +9,7 @@ import sys
 import signal
 import logging
 import os
+import socket
 from time import sleep
 import dbus
 import dbus.service
@@ -24,7 +25,7 @@ logging.basicConfig(
 log = logging.getLogger("trevally-bt-agent")
 
 AGENT_PATH = "/org/bluez/agent/trevally"
-AGENT_CAPS = "NoInputNoOutput"
+AGENT_CAPS = "DisplayYesNo"
 BLUEZ_SERVICE = "org.bluez"
 ADAPTER_PATH = "/org/bluez/hci0"
 BLUEZ_PATH = "/org/bluez"
@@ -34,6 +35,7 @@ AGENT_MGR_IFACE = "org.bluez.AgentManager1"
 DEVICE_IFACE = "org.bluez.Device1"
 A2DP_SOURCE_UUID = "0000110a-0000-1000-8000-00805f9b34fb"
 RECONNECT_INTERVAL_SEC = 15
+LEGACY_PIN = os.getenv("TREVALLY_BT_LEGACY_PIN", "0000")
 
 
 def device_path_to_addr(device_path):
@@ -96,11 +98,12 @@ class BlueZAgent(dbus.service.Object):
     @dbus.service.method(AGENT_IFACE, in_signature="o", out_signature="s")
     def RequestPinCode(self, device):
         log.warning(
-            "RequestPinCode from %s (%s); rejecting (NoInputNoOutput mode)",
+            "RequestPinCode from %s (%s); returning legacy PIN %s",
             device_path_to_addr(device),
             device,
+            LEGACY_PIN,
         )
-        raise dbus.DBusException("org.bluez.Error.Rejected")
+        return dbus.String(LEGACY_PIN)
 
     @dbus.service.method(AGENT_IFACE, in_signature="o", out_signature="")
     def RequestAuthorization(self, device):
@@ -188,7 +191,14 @@ def set_adapter_properties(adapter):
     props_iface.Set(ADAPTER_IFACE, "Powered", dbus.Boolean(True))
     props_iface.Set(ADAPTER_IFACE, "Pairable", dbus.Boolean(True))
     props_iface.Set(ADAPTER_IFACE, "Discoverable", dbus.Boolean(True))
-    log.info("Adapter properties set: Powered, Pairable, Discoverable")
+    adapter_address = str(props_iface.Get(ADAPTER_IFACE, "Address"))
+    hostname = socket.gethostname().strip()
+    props_iface.Set(ADAPTER_IFACE, "Alias", dbus.String(hostname))
+    log.info(
+        "Adapter properties set: Powered, Pairable, Discoverable, Address=%s, Alias=%s",
+        adapter_address,
+        hostname,
+    )
 
 
 def register_agent(bus):

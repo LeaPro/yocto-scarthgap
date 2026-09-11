@@ -1,0 +1,15 @@
+[Unit]
+Description=Set hostname from Ethernet MAC
+Wants=sys-subsystem-net-devices-eth0.device
+After=sys-subsystem-net-devices-eth0.device
+Before=network-pre.target
+Wants=network-pre.target
+ConditionPathExists=/sys/class/net/eth0/address
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/trevally-set-hostname.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=network-pre.target

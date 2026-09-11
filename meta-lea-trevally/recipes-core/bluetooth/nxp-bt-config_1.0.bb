@@ -7,13 +7,16 @@ SRC_URI = " \
     file://main.conf \
     file://trevally-bt-agent.py \
     file://trevally-bt-agent.service \
+    file://trevally-bluetooth-persist.sh \
+    file://trevally-bluetooth-persist.service \
+    file://bluetooth-persist-ordering.conf \
     file://bluealsa-aplay-override.conf \
     file://asound.conf \
 "
 
 inherit systemd
 
-SYSTEMD_SERVICE:${PN} = "trevally-bt-agent.service"
+SYSTEMD_SERVICE:${PN} = "trevally-bluetooth-persist.service trevally-bt-agent.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 S = "${WORKDIR}"
@@ -23,14 +26,18 @@ do_install() {
     install -d ${D}${libexecdir}
     install -d ${D}${systemd_system_unitdir}
     install -d ${D}${sysconfdir}/systemd/system/bluealsa-aplay.service.d
+    install -d ${D}${sysconfdir}/systemd/system/bluetooth.service.d
     install -d ${D}${sysconfdir}
 
     install -m 0644 ${WORKDIR}/main.conf ${D}${sysconfdir}/bluetooth/main.conf
     install -m 0755 ${WORKDIR}/trevally-bt-agent.py ${D}${libexecdir}/trevally-bt-agent.py
     install -m 0644 ${WORKDIR}/trevally-bt-agent.service ${D}${systemd_system_unitdir}/trevally-bt-agent.service
+    install -m 0755 ${WORKDIR}/trevally-bluetooth-persist.sh ${D}${libexecdir}/trevally-bluetooth-persist.sh
+    install -m 0644 ${WORKDIR}/trevally-bluetooth-persist.service ${D}${systemd_system_unitdir}/trevally-bluetooth-persist.service
+    install -m 0644 ${WORKDIR}/bluetooth-persist-ordering.conf ${D}${sysconfdir}/systemd/system/bluetooth.service.d/override.conf
     install -m 0644 ${WORKDIR}/bluealsa-aplay-override.conf ${D}${sysconfdir}/systemd/system/bluealsa-aplay.service.d/override.conf
     install -m 0644 ${WORKDIR}/asound.conf ${D}${sysconfdir}/asound.conf
 }
 
-FILES:${PN} = "${sysconfdir}/bluetooth/main.conf ${libexecdir}/trevally-bt-agent.py ${systemd_system_unitdir}/trevally-bt-agent.service ${sysconfdir}/systemd/system/bluealsa-aplay.service.d/override.conf ${sysconfdir}/asound.conf"
+FILES:${PN} = "${sysconfdir}/bluetooth/main.conf ${libexecdir}/trevally-bt-agent.py ${libexecdir}/trevally-bluetooth-persist.sh ${systemd_system_unitdir}/trevally-bt-agent.service ${systemd_system_unitdir}/trevally-bluetooth-persist.service ${sysconfdir}/systemd/system/bluetooth.service.d/override.conf ${sysconfdir}/systemd/system/bluealsa-aplay.service.d/override.conf ${sysconfdir}/asound.conf"
 RDEPENDS:${PN} += "python3-core python3-dbus python3-pygobject"
