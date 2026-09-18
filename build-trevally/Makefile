@@ -81,7 +81,7 @@ ipcTool:
 	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/ipcTool $(EXTRA_SUBDIR_GOALS)
 	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${WEBSOCKETAPI_DIR}/ipcTool/obj/ipcTool ${YOCTO_DIR}/meta-lea-trevally/recipes-core/application-server-service/files; fi
 
-image-quick:
+image-quick: dtb
 	@echo building $@
 	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(YOCTO_IMAGE)
 	mkdir -p ${BUILD_DIR}/postBuild/images
@@ -95,7 +95,7 @@ kernel:
 
 dtb:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c rebuild_dtb
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c rebuild_dtb && bitbake $(KERNEL_RECIPE) -f -c deploy
 
 bitbake-shell:
 	@echo 'PS1=$$PS1\<bitbake-shell\>$$\ ' > $(TMP_RCFILE)
