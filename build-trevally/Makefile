@@ -64,7 +64,10 @@ u-boot:
 application-server:
 	@echo building $@
 	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${TREVALLY_DIR}/application-server $(EXTRA_SUBDIR_GOALS)
-	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${TREVALLY_DIR}/application-server/obj/application-server ${YOCTO_DIR}/meta-lea-trevally/recipes-core/application-server-service/files; fi
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then \
+		cp --update ${TREVALLY_DIR}/application-server/obj/application-server ${YOCTO_DIR}/meta-lea-trevally/recipes-core/application-server-service/files; \
+		cp --update ${TREVALLY_DIR}/application-server/third_party/splayerapi-v5/lib/libsplayer-1.so ${YOCTO_DIR}/meta-lea-trevally/recipes-core/application-server-service/files; \
+	fi
 
 gpioTool:
 	@echo building $@
