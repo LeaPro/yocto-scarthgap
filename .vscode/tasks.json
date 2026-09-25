@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Rebuild Pilotfish kernel",
+			"type": "shell",
+			"command": "cd /home/mlwerba/LEA/yocto-scarthgap/build-Pilotfish && ./build.sh",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

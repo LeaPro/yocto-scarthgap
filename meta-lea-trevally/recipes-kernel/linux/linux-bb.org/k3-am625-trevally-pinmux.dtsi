@@ -50,15 +50,37 @@
 
 	touchscreen_pins_default: touchscreen-default-pins {
 		pinctrl-single,pins = <
-			AM62X_IOPAD(0x01b4, PIN_OUTPUT, 7) /* (A13) SPI0_CS0.GPIO1_15 */
-			AM62X_IOPAD(0x00a0, PIN_INPUT, 7) /* (K25) GPMC0_WPn.GPIO0_39 */
+			AM62X_IOPAD(0x0004, PIN_OUTPUT, 7) /* (G25) OSPI0_LBCLKO.GPIO0_1 - CTP_RST */
+			AM62X_IOPAD(0x017c, PIN_INPUT, 7)  /* (AD22) RGMII2_RX_CTL.GPIO1_1 - CTP_INT */
 		>;
 	};
 
+	lcd_ctrl_pins_default: lcd-ctrl-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x0010, PIN_OUTPUT, 7) /* (G24) OSPI0_D1.GPIO0_4 - TFT_SLEEP */
+			AM62X_IOPAD(0x0034, PIN_OUTPUT, 7) /* (H21) OSPI0_CSn2.GPIO0_13 - LCD_RSTn */
+		>;
+	};
+
+	lcd_spi1_pins_default: lcd-spi1-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x001c, PIN_OUTPUT, 1) /* (J23) OSPI0_D4.SPI1_CS0 */
+			AM62X_IOPAD(0x0020, PIN_INPUT, 1)  /* (J25) OSPI0_D5.SPI1_CLK */
+			AM62X_IOPAD(0x0024, PIN_OUTPUT, 1) /* (H25) OSPI0_D6.SPI1_D0 */
+		>;
+	};
+
+	/* DMT049W1NTCMI-1A backlight boost (20V) PWM dimming/enable input.
+	 * PILOTFISH-QUAD-v128.syscfg: EPWM1_20V0_PWM.A -> SPI0_CS0 (EHRPWM0_A) */
 	backlight_pins_default: bl-default-pins {
 		pinctrl-single,pins = <
-			AM62X_IOPAD(0x0000, PIN_OUTPUT, 7) /* (H24) OSPI0_CLK.GPIO0_0 */
-			AM62X_IOPAD(0x01b8, PIN_OUTPUT, 2) /* (C13) SPI0_CS1.EHRPWM0_B */
+			AM62X_IOPAD(0x01b4, PIN_OUTPUT, 2) /* (A13) SPI0_CS0.EHRPWM0_A */
+		>;
+	};
+
+	backlight_enable_pins_default: bl-enable-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x0068, PIN_OUTPUT, 7) /* (R21) GPMC0_AD11.GPIO0_26 */
 		>;
 	};
 };
