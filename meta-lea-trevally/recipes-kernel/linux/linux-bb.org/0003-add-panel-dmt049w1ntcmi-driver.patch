@@ -13,7 +13,7 @@ new file mode 100644
 index 000000000000..058afd824934
 --- /dev/null
 +++ b/drivers/gpu/drm/panel/panel-dmt049w1ntcmi.c
-@@ -0,0 +1,484 @@
+@@ -0,0 +1,491 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Densitron DMT049W1NTCMI-1A  4.9" 480x854 RGB panel driver
@@ -423,6 +423,8 @@ index 000000000000..058afd824934
 +{
 +	struct dmt_panel *ctx;
 +	int ret;
++
++	pr_info("dmt_panel_probe() called, 0003 panel driver is built in and loaded\n");
 +
 +	ctx = devm_kzalloc(&spi->dev, sizeof(*ctx), GFP_KERNEL);
 +	if (!ctx)
