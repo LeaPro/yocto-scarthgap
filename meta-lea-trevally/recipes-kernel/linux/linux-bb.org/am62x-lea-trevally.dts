@@ -348,9 +348,9 @@
 
 	mcasp1_audio_pins_default: mcasp1-audio-default-pins {
 		pinctrl-single,pins = <
-			AM62X_IOPAD(0x0090, PIN_INPUT, 2) /* (M24) GPMC0_BE0N_CLE.MCASP1_ACLKX */
-			AM62X_IOPAD(0x0098, PIN_INPUT, 2) /* (U23) GPMC0_WAIT0.MCASP1_AFSX */
-			AM62X_IOPAD(0x008c, PIN_OUTPUT, 2) /* (L25) GPMC0_WEN.MCASP1_AXR0 */
+			AM62X_IOPAD(0x0124, PIN_INPUT, 1) /* (A23) MMC2_SDCD.MCASP1_ACLKX */
+			AM62X_IOPAD(0x0128, PIN_INPUT, 1) /* (B23) MMC2_SDWP.MCASP1_AFSX */
+			AM62X_IOPAD(0x008c, PIN_OUTPUT, 2) /* (L25) GPMC0_WEn.MCASP1_AXR0 */
 		>;
 	};
 
@@ -730,6 +730,7 @@
 	bluetooth {
 		compatible = "nxp,88w8997-bt";
 		fw-init-baudrate = <115200>;
+		firmware-name = "sduart_nw61x_v1.bin.se";
 	};
 };
 

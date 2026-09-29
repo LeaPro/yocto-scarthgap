@@ -108,11 +108,13 @@ DSP-fast:
 	cd .${FIX_ME} && //opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/workspace -project ${FIX_ME} -build Release-Linux
 	@cp --update FULL_PATH_TO_REMY_DSP.ldr  ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
 
-image: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP
+image-quick: dtb
 	@echo building $@
 	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(YOCTO_IMAGE)
 	mkdir -p ${BUILD_DIR}/postBuild/images
 	@cp $(BUILD_DIR)/deploy-ti/images/lea-remy/core-image-minimal-lea-remy.rootfs.tar.xz ${BUILD_DIR}/postBuild/images
+
+image: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image-quick
 
 kernel:
 	@echo building $@
@@ -120,7 +122,7 @@ kernel:
 
 dtb:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c rebuild_dtb
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -f -c rebuild_dtb && bitbake $(KERNEL_RECIPE) -f -c deploy
 
 bitbake-shell:
 	@echo 'PS1=$$PS1\<bitbake-shell\>$$\ ' > $(TMP_RCFILE)
