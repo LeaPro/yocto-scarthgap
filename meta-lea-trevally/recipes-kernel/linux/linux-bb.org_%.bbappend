@@ -5,6 +5,7 @@ SRC_URI:append:lea-trevally = " \
 	file://k3-am625-trevally-pinmux.dtsi;subdir=git/arch/arm64/boot/dts/ti \
 	file://0003-add-panel-dmt049w1ntcmi-driver.patch \
 	file://0002-sound-soc-dummy-add-of-match.patch \
+	file://0004-add-sitronix-ts-driver.patch \
 	file://disable-audit.cfg \
 	file://trevally-display.cfg \
 	file://trevally-maya-bt.cfg \

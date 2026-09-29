@@ -3264,7 +3264,7 @@ index 000000000000..ad8891eb8959
 +	stmsg("%s:%d bus = %d, addr = 0x%02X: ", __func__, __LINE__, client->adapter->nr, client->addr);
 +	if (i2c_transfer(client->adapter, msg, 1) == 1) {
 +		stmsg("Detected.\n");
-+		/* strlcpy(info->type, SITRONIX_I2C_TOUCH_DRV_NAME, strlen(SITRONIX_I2C_TOUCH_DRV_NAME)+1); */
++		/* strscpy(info->type, SITRONIX_I2C_TOUCH_DRV_NAME, strlen(SITRONIX_I2C_TOUCH_DRV_NAME)+1); */
 +	} else {
 +		stdbg("Not detected.\n");
 +		return -ENODEV;
@@ -3725,7 +3725,7 @@ index 000000000000..993c791ae3a8
 +{
 +	int len = strlen(buf);
 +
-+	strlcpy(path, buf, len);
++	strscpy(path, buf, len);
 +	/* strcpy(path,buf); */
 +	if (buf[len-1] == 10)
 +		path[len-1] = 0;
@@ -3847,7 +3847,7 @@ index 000000000000..993c791ae3a8
 +		if (buf[i] == ' ') {
 +			e = i;
 +			memset(tmp, 0, sizeof(tmp));
-+			strlcpy(tmp, buf + s, e-s+1);
++			strscpy(tmp, buf + s, e-s+1);
 +
 +			if (index == 0) {
 +				rwflag = st_formatinput(tmp, strlen(tmp), index);
@@ -3856,7 +3856,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +				} else {
 +					sterr("write or read must be 0 or 1\n");
-+					strlcpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 1) {
@@ -3866,7 +3866,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +				} else {
 +					sterr("io type must be 0 to 6\n");
-+					strlcpy(gts->cmdio_msg, "io type must be 0 to 6", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "io type must be 0 to 6", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 2) {
@@ -3875,7 +3875,7 @@ index 000000000000..993c791ae3a8
 +				if (addr_h >= 0)
 +					index++;
 +				else {
-+					strlcpy(gts->cmdio_msg, "parser addr_h fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser addr_h fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 3) {
@@ -3884,7 +3884,7 @@ index 000000000000..993c791ae3a8
 +				if (addr_l >= 0)
 +					index++;
 +				else {
-+					strlcpy(gts->cmdio_msg, "parser addr_l fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser addr_l fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else {
@@ -3895,7 +3895,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +					wbuf[dlen++] = data;
 +				} else {
-+					strlcpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +
@@ -3907,7 +3907,7 @@ index 000000000000..993c791ae3a8
 +		}
 +	}
 +	memset(tmp, 0, sizeof(tmp));
-+	strlcpy(tmp, buf + s, count-1-s+1);
++	strscpy(tmp, buf + s, count-1-s+1);
 +
 +	data = st_formatinput(tmp, strlen(tmp), index);
 +	stdbg("data 0x%x\n", data);
@@ -3922,7 +3922,7 @@ index 000000000000..993c791ae3a8
 +	stmsg("rwflag = %d , io type = %d , addr = 0x%02X%02X , data len = 0x%04X , data = %x\n", rwflag, iotype, addr_h, addr_l, dlen, wbuf[0]);
 +	if (rwflag == 0 && (iotype == 3 || iotype == 4) && (dlen%2) == 1) {
 +		sterr("io type 3 and 4 must write even number of data\n");
-+		strlcpy(gts->cmdio_msg, "io type 3 and 4 must write even number of data", sizeof(gts->cmdio_msg));
++		strscpy(gts->cmdio_msg, "io type 3 and 4 must write even number of data", sizeof(gts->cmdio_msg));
 +		return -EIO;
 +	}
 +
@@ -3944,7 +3944,7 @@ index 000000000000..993c791ae3a8
 +
 +	mutex_unlock(&gts->mutex);
 +	if (ret < 0) {
-+		strlcpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
++		strscpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
 +		return ret;
 +	}
 +
@@ -4001,7 +4001,7 @@ index 000000000000..993c791ae3a8
 +		if (buf[i] == ' ') {
 +			e = i;
 +			memset(tmp, 0, sizeof(tmp));
-+			strlcpy(tmp, buf + s, e-s+1);
++			strscpy(tmp, buf + s, e-s+1);
 +
 +			if (index == 0) {
 +				rwflag = st_formatinput(tmp, strlen(tmp), index);
@@ -4010,7 +4010,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +				} else {
 +					sterr("write or read must be 0 or 1\n");
-+					strlcpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 1) {
@@ -4025,7 +4025,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +					wbuf[dlen++] = data;
 +				} else {
-+					strlcpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +
@@ -4037,7 +4037,7 @@ index 000000000000..993c791ae3a8
 +		}
 +	}
 +	memset(tmp, 0, sizeof(tmp));
-+	strlcpy(tmp, buf + s, count-1-s+1);
++	strscpy(tmp, buf + s, count-1-s+1);
 +
 +	data = st_formatinput(tmp, strlen(tmp), index);
 +	stdbg("data 0x%x\n", data);
@@ -4061,7 +4061,7 @@ index 000000000000..993c791ae3a8
 +
 +	mutex_unlock(&gts->mutex);
 +	if (ret < 0) {
-+		strlcpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
++		strscpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
 +		return ret;
 +	}
 +
@@ -4155,14 +4155,14 @@ index 000000000000..993c791ae3a8
 +
 +			if (rwflag > 1) {
 +				sterr("write or read must be 0 or 1. ('w' or 'r')\n");
-+				strlcpy(gts->cmdio_msg, "write or read must be 0 or 1. ('w' or 'r')", sizeof(gts->cmdio_msg));
++				strscpy(gts->cmdio_msg, "write or read must be 0 or 1. ('w' or 'r')", sizeof(gts->cmdio_msg));
 +				ret = -EINVAL;
 +				goto err_return;
 +			}
 +
 +			if (rwflag == 0 && (dlen % 2) == 1) {
 +				sterr("driver cmd must write even number of data.\n");
-+				strlcpy(gts->cmdio_msg, "driver cmd must write even number of data.", sizeof(gts->cmdio_msg));
++				strscpy(gts->cmdio_msg, "driver cmd must write even number of data.", sizeof(gts->cmdio_msg));
 +				ret = -EINVAL;
 +				goto err_return;
 +			}
@@ -4177,7 +4177,7 @@ index 000000000000..993c791ae3a8
 +			mutex_unlock(&gts->mutex);
 +
 +			if (ret < 0) {
-+				strlcpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
++				strscpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
 +				ret = -EIO;
 +				goto err_return;
 +			}
@@ -4423,8 +4423,8 @@ index 000000000000..993c791ae3a8
 +	unsigned char modeValue = 0;
 +	char tmp[3] = {0};
 +
-+	//strlcpy(tmp, buf, 3);
-+	strlcpy(tmp, buf, sizeof(tmp));
++	//strscpy(tmp, buf, 3);
++	strscpy(tmp, buf, sizeof(tmp));
 +	modeID = st_formatinput(tmp, 2, 0);
 +
 +	if (modeID == ST_MODE_GRIP) {
@@ -4948,7 +4948,7 @@ index 000000000000..993c791ae3a8
 +		goto err_cdev_add;
 +	}
 +
-+	sitronix_class = class_create(THIS_MODULE, SITRONIX_I2C_TOUCH_DEV_NAME);
++	sitronix_class = class_create(SITRONIX_I2C_TOUCH_DEV_NAME);
 +	if (IS_ERR(sitronix_class)) {
 +		result = PTR_ERR(sitronix_class);
 +		unregister_chrdev(sitronix_major, SITRONIX_I2C_TOUCH_DEV_NAME);
@@ -5552,7 +5552,7 @@ index 000000000000..993c791ae3a8
 +		if (buf[i] == ' ') {
 +			e = i;
 +			memset(tmp, 0, sizeof(tmp));
-+			strlcpy(tmp, buf + s, e-s+1);
++			strscpy(tmp, buf + s, e-s+1);
 +
 +			if (index == 0) {
 +				rwflag = st_formatinput(tmp, strlen(tmp), index);
@@ -5561,7 +5561,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +				} else {
 +					sterr("write or read must be 0 or 1\n");
-+					strlcpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 1) {
@@ -5571,7 +5571,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +				} else {
 +					sterr("io type must be 0 to 6\n");
-+					strlcpy(gts->cmdio_msg, "io type must be 0 to 6", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "io type must be 0 to 6", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 2) {
@@ -5580,7 +5580,7 @@ index 000000000000..993c791ae3a8
 +				if (addr_h >= 0)
 +					index++;
 +				else {
-+					strlcpy(gts->cmdio_msg, "parser addr_h fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser addr_h fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 3) {
@@ -5589,7 +5589,7 @@ index 000000000000..993c791ae3a8
 +				if (addr_l >= 0)
 +					index++;
 +				else {
-+					strlcpy(gts->cmdio_msg, "parser addr_l fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser addr_l fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else {
@@ -5600,7 +5600,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +					wbuf[dlen++] = data;
 +				} else {
-+					strlcpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +
@@ -5612,7 +5612,7 @@ index 000000000000..993c791ae3a8
 +		}
 +	}
 +	memset(tmp, 0, sizeof(tmp));
-+	strlcpy(tmp, buf + s, count-1-s+1);
++	strscpy(tmp, buf + s, count-1-s+1);
 +
 +	data = st_formatinput(tmp, strlen(tmp), index);
 +	stdbg("data 0x%x\n", data);
@@ -5627,7 +5627,7 @@ index 000000000000..993c791ae3a8
 +	stmsg("rwflag = %d , io type = %d , addr = 0x%02X%02X , data len = 0x%04X , data = %x\n", rwflag, iotype, addr_h, addr_l, dlen, wbuf[0]);
 +	if (rwflag == 0 && (iotype == 3 || iotype == 4) && (dlen%2) == 1) {
 +		sterr("io type 3 and 4 must write even number of data\n");
-+		strlcpy(gts->cmdio_msg, "io type 3 and 4 must write even number of data", sizeof(gts->cmdio_msg));
++		strscpy(gts->cmdio_msg, "io type 3 and 4 must write even number of data", sizeof(gts->cmdio_msg));
 +		return -EIO;
 +	}
 +
@@ -5649,7 +5649,7 @@ index 000000000000..993c791ae3a8
 +
 +	mutex_unlock(&gts->mutex);
 +	if (ret < 0) {
-+		strlcpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
++		strscpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
 +		return ret;
 +	}
 +
@@ -5702,7 +5702,7 @@ index 000000000000..993c791ae3a8
 +		if (buf[i] == ' ') {
 +			e = i;
 +			memset(tmp, 0, sizeof(tmp));
-+			strlcpy(tmp, buf + s, e-s+1);
++			strscpy(tmp, buf + s, e-s+1);
 +
 +			if (index == 0) {
 +				rwflag = st_formatinput(tmp, strlen(tmp), index);
@@ -5711,7 +5711,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +				} else {
 +					sterr("write or read must be 0 or 1\n");
-+					strlcpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "write or read must be 0 or 1", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +			} else if (index == 1) {
@@ -5726,7 +5726,7 @@ index 000000000000..993c791ae3a8
 +					index++;
 +					wbuf[dlen++] = data;
 +				} else {
-+					strlcpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
++					strscpy(gts->cmdio_msg, "parser data fail", sizeof(gts->cmdio_msg));
 +					return -EIO;
 +				}
 +
@@ -5738,7 +5738,7 @@ index 000000000000..993c791ae3a8
 +		}
 +	}
 +	memset(tmp, 0, sizeof(tmp));
-+	strlcpy(tmp, buf + s, count-1-s+1);
++	strscpy(tmp, buf + s, count-1-s+1);
 +
 +	data = st_formatinput(tmp, strlen(tmp), index);
 +	stdbg("data 0x%x\n", data);
@@ -5762,7 +5762,7 @@ index 000000000000..993c791ae3a8
 +
 +	mutex_unlock(&gts->mutex);
 +	if (ret < 0) {
-+		strlcpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
++		strscpy(gts->cmdio_msg, "I2C/SPI error" , sizeof(gts->cmdio_msg));
 +		return ret;
 +	}
 +
@@ -7537,7 +7537,7 @@ index 000000000000..246a4ef25f3f
 +	int ret;
 +	uint8_t retry;
 +
-+	if (spi->master->flags & SPI_MASTER_HALF_DUPLEX) {
++	if (spi->controller->flags & SPI_CONTROLLER_HALF_DUPLEX) {
 +		sterr("%s: Full duplex not supported by host!\n", __func__);
 +		return -EIO;
 +	}
@@ -7551,8 +7551,8 @@ index 000000000000..246a4ef25f3f
 +	spi->bits_per_word = 8;
 +	spi->mode = spi_data.spi_mode;	/* SPI_MODE_3 */
 +	spi->max_speed_hz = spi_data.spi_max_freq;
-+	spi->chip_select = spi_data.reg;
-+	//stmsg("spi->chip_select = %d\n", spi->chip_select); 
++	spi_set_chipselect(spi, 0, spi_data.reg);
++	//stmsg("spi->chip_select = %d\n", spi_get_chipselect(spi, 0)); 
 +	/* stmsg(" spi_data.spi_max_freq = %d\n", spi_data.spi_max_freq); */
 +	/* spi->max_speed_hz = 9600000; */
 +
@@ -39774,7 +39774,7 @@ index 000000000000..8f32733658c9
 +	ret = st_check_fw(buf, &fwOff, &fwSize, &fwInfoOff, &cfgFlashOff, &cfgDramhOff);
 +	
 +	if (ret < 0) {
-+		strlcpy(gts->upgrade_msg, "st_check_fw fail", sizeof(gts->upgrade_msg));
++		strscpy(gts->upgrade_msg, "st_check_fw fail", sizeof(gts->upgrade_msg));
 +		sterr("st_check_fw fail\n");
 +		goto sitronix_spi_hdl_fw_finish;
 +	}
@@ -39782,7 +39782,7 @@ index 000000000000..8f32733658c9
 +	ret = st_check_cfg(buf + cfgFlashOff, &cfgSize);
 +
 +	if (ret < 0) {
-+		strlcpy(gts->upgrade_msg, "st_check_cfg fail", sizeof(gts->upgrade_msg));
++		strscpy(gts->upgrade_msg, "st_check_cfg fail", sizeof(gts->upgrade_msg));
 +		sterr("st_check_cfg fail\n");
 +		goto sitronix_spi_hdl_fw_finish;
 +	}
@@ -40027,7 +40027,7 @@ index 000000000000..8f32733658c9
 +	ret = sitronix_spi_hdl_fw(dump_buf);
 +	if (ret < 0) {
 +		sterr("sitronix_spi_hdl_fw fail!\n");
-+		strlcpy(gts->upgrade_msg, "sitronix_spi_hdl_fw fail", sizeof(gts->upgrade_msg));
++		strscpy(gts->upgrade_msg, "sitronix_spi_hdl_fw fail", sizeof(gts->upgrade_msg));
 +	} else
 +		stmsg("sitronix_spi_hdl_fw success\n");
 +	if (ret >= 0) {
