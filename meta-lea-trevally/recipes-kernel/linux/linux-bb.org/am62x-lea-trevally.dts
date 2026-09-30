@@ -157,7 +157,7 @@
 			sound-dai = <&net_dummy_codec>;
 		};
 	};
-  /*
+	/*
  	leds {
 		bootph-all;
 		compatible = "gpio-leds";
@@ -374,6 +374,15 @@
 		>;
 	};
 
+	mcu_spi0_pins_default: mcu-spi0-default-pins {
+			pinctrl-single,pins = <
+					AM62X_MCU_IOPAD(0x0008, PIN_INPUT, 0) /* (A7) MCU_SPI0_CLK */
+					AM62X_MCU_IOPAD(0x000c, PIN_INPUT, 0) /* (D9) MCU_SPI0_D0 */
+					AM62X_MCU_IOPAD(0x0010, PIN_INPUT, 0) /* (C9) MCU_SPI0_D1 */
+					AM62X_MCU_IOPAD(0x0000, PIN_INPUT, 0) /* (E8) MCU_SPI0_CS0 */
+			>;
+	};
+
 	//wifi_32k_clk: mcu-clk-out-default-pins {
 	//	pinctrl-single,pins = <
 	//		AM62X_MCU_IOPAD(0x0084, PIN_OUTPUT, 0) /* (A12) WKUP_CLKOUT0 */
@@ -583,6 +592,21 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&mikrobus_spi_pins_default>;
 	status = "disabled";
+};
+
+&mcu_spi0 {
+		pinctrl-names = "default";
+		pinctrl-0 = <&mcu_spi0_pins_default>;
+		status = "okay";
+		ti,pindir-d0-out-d1-in;
+		adc@0 {
+				compatible = "microchip,mcp3008";
+				reg = <0>;
+				spi-max-frequency = <1000000>;
+				vdd-supply = <&vdd_3v3>;
+				vref-supply = <&vdd_3v3>;
+				#io-channel-cells = <1>;
+		};
 };
 
 &sdhci0 {
