@@ -1,8 +1,8 @@
 SUMMARY = "Trevally application server"
 DESCRIPTION = "Service that runs the Trevally application server"
 LICENSE = "CLOSED"
-DEPENDS = "boost lmdb openssl curl bash python3"
-RDEPENDS:${PN} = "libudev libdrm"
+DEPENDS = "boost lmdb openssl curl bash python3 hidapi"
+RDEPENDS:${PN} = "libudev libdrm hidapi"
 INSANE_SKIP:${PN} += "file-rdeps"
 PR = "r1"
 

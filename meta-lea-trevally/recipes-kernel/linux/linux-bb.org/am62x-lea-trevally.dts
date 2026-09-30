@@ -379,6 +379,12 @@
 		>;
 	};
 
+	usb0_pins_default: usb0-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x0254, PIN_OUTPUT, 0) /* (C20) USB0_DRVVBUS */
+		>;
+	};
+
 	usb1_pins_default: usb1-default-pins {
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x0258, PIN_INPUT, 0) /* (F18) USB1_DRVVBUS */
@@ -451,7 +457,9 @@
 
 &usb0 {
 	bootph-all;
-	dr_mode = "peripheral";
+	dr_mode = "host";
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb0_pins_default>;
 };
 
 &usbss1 {
@@ -460,7 +468,7 @@
 };
 
 &usb1 {
-	dr_mode = "host";
+	dr_mode = "peripheral";
 	pinctrl-names = "default";
 	pinctrl-0 = <&usb1_pins_default>;
 };
