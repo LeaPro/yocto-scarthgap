@@ -371,7 +371,7 @@ index 000000000000..058afd824934
 +			       struct drm_connector *connector)
 +{
 +	struct dmt_panel *ctx = to_dmt_panel(panel);
-+	const u32 bus_formats[] = { MEDIA_BUS_FMT_RGB565_1X16 };
++	const u32 bus_formats[] = { MEDIA_BUS_FMT_RGB888_1X24 };
 +	struct drm_display_mode *mode;
 +
 +	dev_info(&ctx->spi->dev, "DMT: get_modes() called\n");
