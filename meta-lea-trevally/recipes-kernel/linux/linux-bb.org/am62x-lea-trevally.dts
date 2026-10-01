@@ -598,7 +598,6 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&mcu_spi0_pins_default>;
 		status = "okay";
-		ti,pindir-d0-out-d1-in;
 		adc@0 {
 				compatible = "microchip,mcp3008";
 				reg = <0>;
