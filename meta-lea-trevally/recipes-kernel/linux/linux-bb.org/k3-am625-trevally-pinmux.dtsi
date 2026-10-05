@@ -55,6 +55,13 @@
 		>;
 	};
 
+	/* PILOTFISH-QUAD-v128.syscfg: GPIO1_3_FACTORY_RESET -> RGMII2_RD0 (main_gpio1 pin 3) */
+	factory_reset_pins_default: factory-reset-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x0184, PIN_INPUT_PULLUP, 7) /* (AE23) RGMII2_RD0.GPIO1_3 - FACTORY_RESET */
+		>;
+	};
+
 	lcd_ctrl_pins_default: lcd-ctrl-default-pins {
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x0010, PIN_OUTPUT, 7) /* (G24) OSPI0_D1.GPIO0_4 - TFT_SLEEP */
@@ -75,6 +82,14 @@
 	backlight_pins_default: bl-default-pins {
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x01b4, PIN_OUTPUT, 2) /* (A13) SPI0_CS0.EHRPWM0_A */
+		>;
+	};
+
+	/* IS31FL3235A LED driver (on &main_i2c3 @ 0x3c) active-low reset.
+	 * PILOTFISH-QUAD-v128.syscfg: GPIO0_3_LED_CTRL_nRESET -> OSPI0_D0 (main_gpio0 pin 3) */
+	led_driver_pins_default: led-driver-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x000c, PIN_OUTPUT, 7) /* (E25) OSPI0_D0.GPIO0_3 - LED_CTRL_nRESET */
 		>;
 	};
 };

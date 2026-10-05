@@ -500,7 +500,7 @@
 &main_gpio0 {
 	bootph-all;
 	pinctrl-names = "default";
-	pinctrl-0 = <&gpio0_pins_default>;
+	pinctrl-0 = <&gpio0_pins_default &led_driver_pins_default>;
 
 	tft-sleep-hog {
 		gpio-hog;
@@ -514,7 +514,7 @@
 &main_gpio1 {
 	bootph-all;
 	pinctrl-names = "default";
-	pinctrl-0 = <&gpio1_pins_default>;
+	pinctrl-0 = <&gpio1_pins_default &factory_reset_pins_default>;
 };
 
 &main_i2c0 {
