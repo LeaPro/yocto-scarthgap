@@ -28,11 +28,11 @@ RUN apt-get update && apt-get install -y --allow-downgrades gawk wget git-core d
 # make git more forgiving of slow connections (e.g. when downloading Yocto layers)
 RUN git config --system http.version HTTP/1.1 && git config --system http.lowSpeedLimit 0 && git config --system http.lowSpeedTime 999999
 # for manual resume of interrupted kernel mirror fetches, use this one command repeatedly when needed:
-# git -C github.com.beagleboard.linux.git fetch --all --tags --prune --progress
-# if the mirror directory does not exist yet, initialize once:
+# cd build-XXXX/downloads/git2 && rm github.com/beagleboard.linux.git*
 # mkdir -p github.com.beagleboard.linux.git
 # git -C github.com.beagleboard.linux.git init --bare
 # git -C github.com.beagleboard.linux.git remote add origin https://github.com/beagleboard/linux.git
+# git -C github.com.beagleboard.linux.git fetch --all --tags --prune --progress
 # then continue with BitBake fetch/build as usual.
 
 
