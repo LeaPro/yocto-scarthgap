@@ -1,0 +1,94 @@
+# Deterministic ALSA names for split McASP cards.
+# MCASP1,0 carries BT I2S and MCASP0,0 carries NET I2S.
+
+pcm.trevally_bt_hw {
+    type hw
+    card "MCASP1"
+    device 0
+}
+
+ctl.trevally_bt_hw {
+    type hw
+    card "MCASP1"
+}
+
+pcm.trevally_bt_48k {
+    type rate
+    slave {
+        pcm "trevally_bt_hw"
+        rate 48000
+        format S16_LE
+    }
+    converter "speexrate_medium"
+}
+
+pcm.trevally_net_hw {
+    type hw
+    card "MCASP0"
+    device 0
+}
+
+ctl.trevally_net_hw {
+    type hw
+    card "MCASP0"
+}
+
+pcm.trevally_net_48k {
+    type rate
+    slave {
+        pcm "trevally_net_hw"
+        rate 48000
+        format S16_LE
+    }
+    converter "speexrate_medium"
+}
+
+pcm.bt_audio {
+    type plug
+    slave.pcm "trevally_bt_48k"
+    hint {
+        show on
+        description "Trevally BT audio endpoint (MCASP1)"
+    }
+}
+
+pcm.net_audio_core {
+    type plug
+    slave.pcm "trevally_net_48k"
+}
+
+pcm.net_audio {
+    type softvol
+    slave.pcm "net_audio_core"
+    control {
+        name "NetAudio Playback Volume"
+        card "MCASP0"
+    }
+    min_dB -51.0
+    max_dB 0.0
+    resolution 128
+    hint {
+        show on
+        description "Trevally network audio endpoint (MCASP0)"
+    }
+}
+
+ctl.bt_audio {
+    type hw
+    card "MCASP1"
+}
+
+ctl.net_audio {
+    type hw
+    card "MCASP0"
+}
+
+pcm.!default {
+    type plug
+    slave.pcm "net_audio"
+}
+
+ctl.!default {
+    type hw
+    card "MCASP0"
+}
