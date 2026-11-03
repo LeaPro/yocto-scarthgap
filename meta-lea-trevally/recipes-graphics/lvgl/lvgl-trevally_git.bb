@@ -8,6 +8,7 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=802d3d83ae80ef5f343050bf96cce3a4"
 
 SRC_URI = "gitsm://github.com/LeaPro/LEA-LVGL.git;protocol=https;branch=master \
            file://trevally.defconfig \
+           file://0001-evdev-keep-slot-coordinates-after-release.patch \
            "
 SRCREV = "7c521552bdd34434e0a872f67ab5d1aaa086a206"
 

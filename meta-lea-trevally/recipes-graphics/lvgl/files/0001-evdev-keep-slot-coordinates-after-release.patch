@@ -1,0 +1,22 @@
+diff --git a/lvgl/src/drivers/evdev/lv_evdev.c b/lvgl/src/drivers/evdev/lv_evdev.c
+index 518d400c11..fc5deabac3 100644
+--- a/lvgl/src/drivers/evdev/lv_evdev.c
++++ b/lvgl/src/drivers/evdev/lv_evdev.c
+@@ -354,11 +354,14 @@ static void _evdev_read(lv_indev_t * indev, lv_indev_data_t * data)
+      * coordinates.  This prevents stale RELEASED slots from being re-fed into
+      * the gesture recognizer on subsequent frames while preserving correct
+      * release coordinates for pointer output (fixes dropdown mis-selection on
+-     * Protocol-A devices like GT9xx). */
++     * Protocol-A devices like GT9xx).
++     *
++     * The coordinates are deliberately NOT zeroed: with multitouch protocol B the
++     * kernel only reports an ABS_MT_POSITION_X/Y that differs from the slot's
++     * previous value, so a new touch at the same X (or Y) as the last one arrives
++     * without that axis and the slot's old value must still be there. */
+     for(int i = 0; i < dsc->touch_count; i++) {
+         if(dsc->touch_data[i].state == LV_INDEV_STATE_RELEASED) {
+-            dsc->touch_data[i].point.x = 0;
+-            dsc->touch_data[i].point.y = 0;
+             dsc->touch_data[i].id = UINT8_MAX;   /*invalid sentinel*/
+             LV_LOG_TRACE("Cleared released touch point slot %d", i);
+         }
