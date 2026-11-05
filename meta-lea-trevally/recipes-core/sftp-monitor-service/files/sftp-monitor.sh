@@ -16,21 +16,20 @@ EMMC=mmcblk0
 
 while [ 1 = 1 ] ; do
   unset IFS
-  /usr/bin/inotifywait -m -e close_write $SFTP_DIR |
+  /usr/bin/inotifywait -m -e close_write -e moved_to $SFTP_DIR |
   while read DIR OP FILE ; do
     echo "dir is $DIR, op is $OP, file is $FILE"
     /bin/sleep 1s
     pushd $DIR
     # f/w updates require a tar.xz archive encrypted with openssl
-    #if [[ $FILE == *tar.xz.enc ]] ; then
-    if [[ $FILE == *tar.xz ]] ; then
-      TARBALL=${FILE}
-      #TARBALL=${FILE%.*}
-      #echo "decrypting"
-      #openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k DTSB
-      # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k DTSB
+    if [[ $FILE == *tar.xz.enc ]] ; then
+      TARBALL=${FILE%.*}
+      echo "decrypting"
+      ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"Decrypting"}' || true
+      openssl enc -aes-256-cbc -d -in $FILE -out $TARBALL -k GCEA
+      # encrypt with: openssl enc -aes-256-cbc -salt -in $TARBALL -out $FILE -k GCEA
       if [[ $? = 0 ]] ; then
-        #rm $FILE
+        rm $FILE
         # format eMMC if we're not running from it
         FORMATTED_EMMC=0
         mount | grep -e "${EMMC}.* on /"
@@ -51,6 +50,7 @@ while [ 1 = 1 ] ; do
         fi
         PART="/dev/${EMMC}p$EMMCPART"
         echo "extracting $TARBALL into $PART"
+        ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"Extraction"}' || true
         mkdir -p /mnt/rootfs
         mount $PART /mnt/rootfs
         export EXTRACT_UNSAFE_SYMLINKS=1
@@ -60,6 +60,7 @@ while [ 1 = 1 ] ; do
         echo 0 > /sys/block/${EMMC}boot1/force_ro # required to write u-boot env vars
         fw_setenv emmcpart $EMMCPART
         echo "extraction complete"
+        ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionComplete"}' || true
         sleep 2
         rm -f -- "$TARBALL"
         set +e # don't exit on non-zero return code
@@ -80,6 +81,7 @@ while [ 1 = 1 ] ; do
         reboot
       else
         echo "decrypt failed"
+        ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"DecryptingFail"}' || true
         sleep 5
       fi
     # copy 802.1x certificates to /mnt/data/uploaded-certs
@@ -94,6 +96,7 @@ while [ 1 = 1 ] ; do
       fi
     else
       echo "unsupported file type"
+      ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"ExtractionFail"}' || true
         sleep 5
     fi
     rm -f -- "$FILE"
