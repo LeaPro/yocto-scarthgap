@@ -33,3 +33,6 @@ IMAGE_INSTALL:append:lea-trevally = " \
     linux-firmware-nxpiw612-sdio \
     nxp-bt-config \
 "
+
+# IANA time zone database (used by the application-server DateTime leaf, e.g. America/Indiana/Indianapolis).
+IMAGE_INSTALL:append:lea-trevally = " tzdata"

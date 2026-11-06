@@ -30,10 +30,10 @@ if ($method ne 'POST') {
     exit 0;
 }
 
-my $filename = $q->param('filename') // '';
+my $filename = $q->param('file') // '';
 my $category = $q->param('category') // 'misc-files';
 my $metadata_json = $q->param('metadata_json');
-my $upload_fh = $q->upload('filename');
+my $upload_fh = $q->upload('file');
 
 $metadata_json = '' unless defined $metadata_json;
 $metadata_json =~ s/\r\n/\n/g;
