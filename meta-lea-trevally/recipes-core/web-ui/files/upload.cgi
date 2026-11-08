@@ -5,7 +5,39 @@ use warnings;
 use CGI;
 use File::Basename;
 
-my $q = CGI->new;
+# Publish firmware upload progress to /misc/fwDownloadProgress as the request body
+# arrives (requires server.stream-request-body in lighttpd.conf).
+my $content_length = $ENV{'CONTENT_LENGTH'} || 0;
+my $last_progress = -1;
+my $progress_reported = 0;
+my $progress_finished = 0;
+
+sub set_fw_download_progress {
+    my ($progress) = @_;
+    $progress = int($progress);
+    # stdout is the HTTP response, so keep ipcTool output out of it
+    system("ipcTool --port=1236 --url=/misc --method=set --params='{\"fwDownloadProgress\":$progress}' >/dev/null 2>&1");
+}
+
+sub upload_hook {
+    my ($client_filename, $buffer, $bytes_read) = @_;
+    # only firmware archives, matching what sftp-monitor.sh handles
+    return unless $content_length > 0 && defined $client_filename && $client_filename =~ /\.tar\.xz\.enc$/i;
+    my $progress = int($bytes_read * 100 / $content_length);
+    # the request body includes multipart overhead; 100 is published once the file is saved
+    $progress = 99 if $progress > 99;
+    return if $progress == $last_progress;
+    $last_progress = $progress;
+    $progress_reported = 1;
+    set_fw_download_progress($progress);
+}
+
+# clear progress if the upload failed or turned out not to be a firmware update
+END {
+    set_fw_download_progress(0) if $progress_reported && !$progress_finished;
+}
+
+my $q = CGI->new(\&upload_hook, undef, 1);
 
 sub h {
     my ($s) = @_;
@@ -100,6 +132,11 @@ while (read($upload_fh, my $buf, 4096)) {
 
 close($output_fh);
 close($upload_fh);
+
+if ($progress_reported && $category eq 'firmware-update') {
+    set_fw_download_progress(100);
+    $progress_finished = 1;
+}
 
 my $metadata_path = "$server_path.metadata.json";
 if ($metadata_present && $metadata_valid) {
