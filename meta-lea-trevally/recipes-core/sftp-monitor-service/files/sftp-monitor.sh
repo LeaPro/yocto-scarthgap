@@ -20,6 +20,11 @@ while [ 1 = 1 ] ; do
   while read DIR OP FILE ; do
     echo "dir is $DIR, op is $OP, file is $FILE"
     /bin/sleep 1s
+    # skip events for files already handled, e.g. openssl's output from a failed decrypt
+    if [[ ! -e "$DIR$FILE" ]] ; then
+      echo "$FILE no longer exists, skipping"
+      continue
+    fi
     pushd $DIR
     # f/w updates require a tar.xz archive encrypted with openssl
     if [[ $FILE == *tar.xz.enc ]] ; then
@@ -81,6 +86,7 @@ while [ 1 = 1 ] ; do
         reboot
       else
         echo "decrypt failed"
+        rm -f -- "$TARBALL" # openssl leaves partial output behind
         ipcTool --port=1236 --url=/misc --method=set --params='{"fwUpdateStatus":"DecryptingFail"}' || true
         sleep 5
       fi
