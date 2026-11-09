@@ -94,7 +94,6 @@
 	};
 
 	vdd_3v3: regulator-2 {
-		/* output of TLV62595DMQR-U12 */
 		bootph-all;
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_3v3";
@@ -106,19 +105,14 @@
 	};
 
 	vdd_3v3_sd: regulator-4 {
-		/* output of TPS22918DBVR-U21 */
 		bootph-all;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vdd_3v3_sd_pins_default>;
-
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_3v3_sd";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		enable-active-high;
 		regulator-always-on;
 		vin-supply = <&vdd_3v3>;
-		gpio = <&main_gpio1 19 GPIO_ACTIVE_HIGH>;
+		regulator-boot-on;
 	};
 
 	vdd_sd_dv: regulator-5 {
@@ -139,6 +133,30 @@
 	emmc_pwrseq: emmc-pwrseq {
 		compatible = "mmc-pwrseq-emmc";
 		reset-gpios = <&main_gpio0 16 GPIO_ACTIVE_LOW>;
+	};
+
+	remy_dummy_codec: remy-dummy-codec {
+		compatible = "linux,snd-soc-dummy";
+		#sound-dai-cells = <0>;
+	};
+
+	remy_sound: sound-remy {
+		compatible = "simple-audio-card";
+		simple-audio-card,name = "REMY8CH";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,playback-only;
+		simple-audio-card,bitclock-master = <&remy_codec_master>;
+		simple-audio-card,frame-master = <&remy_codec_master>;
+
+		simple-audio-card,cpu {
+			sound-dai = <&mcasp0>;
+			dai-tdm-slot-num = <8>;
+			dai-tdm-slot-width = <32>;
+		};
+
+		remy_codec_master: simple-audio-card,codec {
+			sound-dai = <&remy_dummy_codec>;
+		};
 	};
 
  	leds {
@@ -169,10 +187,6 @@
 			function = LED_FUNCTION_LAN;
 		};
 
-		led-4 {
-			gpios = <&main_gpio0 9 GPIO_ACTIVE_HIGH>;
-			function = LED_FUNCTION_WLAN;
-		};
 	};
 
 	gpio_keys: gpio-keys {
@@ -201,11 +215,8 @@
 			AM62X_IOPAD(0x0010, PIN_OUTPUT, 7) /* (G24) OSPI0_D1.GPIO0_4 (LED1) */
 			AM62X_IOPAD(0x0014, PIN_OUTPUT, 7) /* (F25) OSPI0_D2.GPIO0_5 (LED2) */
 			AM62X_IOPAD(0x0018, PIN_OUTPUT, 7) /* (F24) OSPI0_D3.GPIO0_6 (LED3) */
-			AM62X_IOPAD(0x0024, PIN_INPUT, 7) /* (H25) OSPI0_D6.GPIO0_9 (DSP1-3_SPI1_MOSI) */
-			AM62X_IOPAD(0x0028, PIN_INPUT, 7) /* (J22) OSPI0_D7.GPIO0_10 (DSP1-3_SPI1_MISO) */
 			AM62X_IOPAD(0x002c, PIN_INPUT, 7) /* (F23) OSPI0_CSn0.GPIO0_11 (AM62_SHARC_RSTn) */
 			AM62X_IOPAD(0x0030, PIN_INPUT, 7) /* (G21) OSPI0_CSn1.GPIO0_12 (SIG_RSTn)*/
-			AM62X_IOPAD(0x0034, PIN_INPUT, 7) /* (H21) OSPI0_CSn2.GPIO0_13 (DSP1-3_SPI1_CS1n) */
 			AM62X_IOPAD(0x0038, PIN_INPUT, 7) /* (E24) OSPI0_CSn3.GPIO0_14 (SHARC_SIGMA_SPI_SELECT) */
 			AM62X_IOPAD(0x0040, PIN_OUTPUT, 7) /* (N23) GPMC0_AD1.GPIO0_16 (eMMC_RSTn) */
 			AM62X_IOPAD(0x00a4, PIN_INPUT, 7) /* (M22) GPMC0_DIR.GPIO0_40 (FPGA_PWR_DISABLEn) */
@@ -288,13 +299,6 @@
 		>;
 	};
 
-	vdd_3v3_sd_pins_default: vdd-3v3-sd-default-pins {
-		bootph-all;
-		pinctrl-single,pins = <
-			AM62X_IOPAD(0x01c4, PIN_INPUT, 7) /* (B14) SPI0_D1_GPIO1_19 */
-		>;
-	};
-
 	sd_pins_default: sd-default-pins {
 		bootph-all;
 		pinctrl-single,pins = <
@@ -356,12 +360,30 @@
 		>;
 	};
 
+	main_spi0_pins_default: main-spi0-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x01bc, PIN_INPUT, 0) /* (A14) SPI0_CLK */
+			AM62X_IOPAD(0x01c0, PIN_INPUT, 0) /* (B13) SPI0_D0 */
+			AM62X_IOPAD(0x01c4, PIN_INPUT, 0) /* (B14) SPI0_D1 */
+			AM62X_IOPAD(0x01b4, PIN_INPUT, 0) /* (A13) SPI0_CS0 */
+			AM62X_IOPAD(0x01b8, PIN_INPUT, 0) /* (C13) SPI0_CS1 */
+		>;
+	};
+
+	main_spi1_pins_default: main-spi1-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x0020, PIN_INPUT, 1) /* (J25) OSPI0_D5.SPI1_CLK */
+			AM62X_IOPAD(0x0024, PIN_INPUT, 1) /* (H25) OSPI0_D6.SPI1_D0 */
+			AM62X_IOPAD(0x0028, PIN_INPUT, 1) /* (J22) OSPI0_D7.SPI1_D1 */
+			AM62X_IOPAD(0x001c, PIN_INPUT, 1) /* (J23) OSPI0_D4.SPI1_CS0 */
+			AM62X_IOPAD(0x0034, PIN_INPUT, 1) /* (H21) OSPI0_CSn2.SPI1_CS1 */
+		>;
+	};
+
 	mikrobus_gpio_pins_default: mikrobus-gpio-default-pins {
 		bootph-all;
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x019c, PIN_INPUT, 7) /* (B18) MCASP0_AXR1.GPIO1_9 */
-			AM62X_IOPAD(0x01a0, PIN_INPUT, 7) /* (E18) MCASP0_AXR0.GPIO1_10 */
-			AM62X_IOPAD(0x01a8, PIN_INPUT, 7) /* (D20) MCASP0_AFSX.GPIO1_12 */
 		>;
 	};
 
@@ -376,6 +398,14 @@
 		pinctrl-single,pins = <
 			AM62X_IOPAD(0x01c8, PIN_INPUT, 0) /* (D14) UART0_RXD */
 			AM62X_IOPAD(0x01cc, PIN_OUTPUT, 0) /* (E14) UART0_TXD */
+		>;
+	};
+
+	mcasp0_audio_pins_default: mcasp0-audio-default-pins {
+		pinctrl-single,pins = <
+			AM62X_IOPAD(0x01a4, PIN_INPUT, 0) /* (B20) MCASP0_ACLKX */
+			AM62X_IOPAD(0x01a8, PIN_INPUT, 0) /* (D20) MCASP0_AFSX */
+			AM62X_IOPAD(0x01a0, PIN_OUTPUT, 0) /* (E18) MCASP0_AXR0 */
 		>;
 	};
 
@@ -647,6 +677,56 @@
 	status = "okay";
 };
 
+&main_spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_spi0_pins_default>;
+	num-cs = <2>;
+	ti,spi-num-cs = <2>;
+	ti,pindir-d0-out-d1-in;
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	spidev@0 {
+		compatible = "rohm,dh2228fv";
+		reg = <0>;
+		spi-max-frequency = <24000000>;
+	};
+
+	spidev@1 {
+		compatible = "rohm,dh2228fv";
+		reg = <1>;
+		spi-max-frequency = <24000000>;
+	};
+};
+
+&ospi0 {
+    status = "disabled";
+};
+
+&main_spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&main_spi1_pins_default>;
+	num-cs = <2>;
+	ti,spi-num-cs = <2>;
+	ti,pindir-d0-out-d1-in;
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	spidev@0 {
+		compatible = "rohm,dh2228fv";
+		reg = <0>;
+		spi-max-frequency = <24000000>;
+	};
+
+	spidev@1 {
+		compatible = "rohm,dh2228fv";
+		reg = <1>;
+		spi-max-frequency = <24000000>;
+	};
+};
+
 &sdhci0 {
 	bootph-all;
 	pinctrl-names = "default";
@@ -704,8 +784,20 @@
 	status = "okay";
 };
 
-&ecap2 {
+&mcasp0 {
+	#sound-dai-cells = <0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&mcasp0_audio_pins_default>;
 	status = "okay";
+	op-mode = <0>;
+	tdm-slots = <8>;
+	serial-dir = <1 0 0 0>;
+	tx-num-evt = <32>;
+	rx-num-evt = <32>;
+};
+
+&ecap2 {
+	status = "disabled";
 	pinctrl-names = "default";
 	pinctrl-0 = <&mikrobus_pwm_pins_default>;
 };

@@ -1,6 +1,6 @@
 # so set 'noatime' option on eMMC partitions
 /dev/root            /                    auto       defaults,noatime                    0  0
-# /dev/mmcblk1p4       /mnt/data            auto       defaults,noauto,noatime             0  0
+LABEL=data           /mnt/data            ext4       defaults,noatime,nofail,x-systemd.device-timeout=5s  0  2
 proc                 /proc                proc       defaults                            0  0
 devpts               /dev/pts             devpts     mode=0620,gid=5                     0  0
 tmpfs                /run                 tmpfs      mode=0755,nodev,nosuid,strictatime  0  0

@@ -77,6 +77,11 @@ fpgaTool:
 	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${REMY_DIR}/application-server/$@ $(EXTRA_SUBDIR_GOALS)
 	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/application-server/$@/obj/$@ ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
+dspTool:
+	@echo building $@
+	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${REMY_DIR}/application-server/$@ $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/application-server/$@/obj/$@ ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
+
 kvsTool:
 	@echo building $@
 	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/kvsTool $(EXTRA_SUBDIR_GOALS)
@@ -95,18 +100,18 @@ stm32flash:
 FPGA:
 	@echo building $@
 	@PATH=$(QUARTUS_PATH):$$PATH && $(MAKE) --directory=${REMY_DIR}/$@ $(EXTRA_SUBDIR_GOALS)
-	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/$@/output_files/remy_pof.svf ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/$@/output_files/fpga.zip ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
 DSP:
 	@echo building $@
 	# note:  on linux cces returns bogus exit code 4 when the build succeeds but 'Failed to regenerate sources' due to a hard-coded check for the Windows-specific file, SourceGen.exe
-	cd ${FIX_ME} && ( /opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/workspace -project ${FIX_ME} -regensrc -cleanBuild Release-Linux || [ $$? -eq 4 ] )
-	@cp --update FULL_PATH_TO_REMY_DSP.ldr ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
+	( cd ${REMY_DIR}/dspCode && rm -rf RemyDsp/Release-Linux && rm -rf /tmp/remy-dsp-workspace && /opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/remy-dsp-workspace -project RemyDsp -regensrc -cleanBuild Release-Linux || [ $$? -eq 4 ] )
+	@cp --update ${REMY_DIR}/dspCode/RemyDsp/Release-Linux/RemyDsp.ldr ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
 
 DSP-fast:
 	@echo building $@
-	cd .${FIX_ME} && //opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/workspace -project ${FIX_ME} -build Release-Linux
-	@cp --update FULL_PATH_TO_REMY_DSP.ldr  ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
+	( cd ${REMY_DIR}/dspCode && rm -rf /tmp/remy-dsp-workspace && /opt/analog/cces/2.10.1/Eclipse/cces -application com.analog.crosscore.headlesstools -noSplash -data /tmp/remy-dsp-workspace -project RemyDsp -build Release-Linux)
+	@cp --update ${REMY_DIR}/dspCode/RemyDsp/Release-Linux/RemyDsp.ldr ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files
 
 image-quick: dtb
 	@echo building $@
@@ -114,11 +119,13 @@ image-quick: dtb
 	mkdir -p ${BUILD_DIR}/postBuild/images
 	@cp $(BUILD_DIR)/deploy-ti/images/lea-remy/core-image-minimal-lea-remy.rootfs.tar.xz ${BUILD_DIR}/postBuild/images
 
-image: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image-quick
+image: FPGA application-server gpioTool fpgaTool kvsTool ipcTool stm32flash image-quick
+#image: u-boot FPGA DSP application-server gpioTool fpgaTool kvsTool ipcTool stm32flash image-quick
+#image: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image-quick
 
 kernel:
 	@echo building $@
-	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE) -c cleansstate && bitbake $(KERNEL_RECIPE)
+	cd ${YOCTO_DIR} && source poky/oe-init-build-env $(BUILD_DIR) && bitbake $(KERNEL_RECIPE)
 
 dtb:
 	@echo building $@
@@ -151,7 +158,7 @@ help:
 	@echo "  DSP"
 	@echo "  DSP-fast"
 	@echo "  image (kernel + device tree binary + rootfs)"
-	@echo "  kernel (clean sstate-cache and rebuild kernel)"
+	@echo "  kernel (incremental kernel build)"
 	@echo "  dtb (DTB-only kernel task)"
 	@echo "  bitbake-shell"
 	@echo "  sdk-shell"
