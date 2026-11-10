@@ -10,10 +10,10 @@ SRC_URI =  " \
     file://sftp-monitor.sh \
     file://rtc-sync.service \
     file://format-eMMC.sh \
-    file://tiboot3.bin \
-    file://tispl.bin \
-    file://u-boot.img \
 "
+
+# Prebuilt (gitignored) bootloader binaries; absent when building the SDK only.
+SRC_URI += "${@bb.utils.contains('DISABLE_CUSTOM_SERVICE_BINARIES', '1', '', 'file://tiboot3.bin file://tispl.bin file://u-boot.img', d)}"
 
 FILES:${PN} += "/boot/*"
 
