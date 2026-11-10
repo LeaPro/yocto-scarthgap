@@ -31,7 +31,12 @@ fi
 
 # CCES license file asumed to be in user's home directory at ~/.analog/cces/license.dat
 # MAC address below must match the one in the license file
-docker run -it --security-opt seccomp=unconfined --rm \
+# allocate a terminal only when there is one (e.g. not from VS Code tasks, CI or scripts)
+DOCKER_TTY_ARGS=(-i)
+if [[ -t 0 && -t 1 ]]; then
+  DOCKER_TTY_ARGS+=(-t)
+fi
+docker run "${DOCKER_TTY_ARGS[@]}" --security-opt seccomp=unconfined --rm \
   --workdir "${PWD}" \
   --mac-address="a4:4c:c8:29:84:c4" \
   --volume "${HOME}:${HOME}" --volume "${YOCTO_DIR}:${YOCTO_DIR}" "${YOCTO_DOWNLOADS_VOLUME[@]}" "${YOCTO_SSTATE_VOLUME[@]}" \
