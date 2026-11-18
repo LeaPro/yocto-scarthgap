@@ -9,7 +9,6 @@ import sys
 import signal
 import logging
 import os
-import socket
 from time import sleep
 import dbus
 import dbus.service
@@ -206,18 +205,34 @@ def wait_for_adapter(bus, timeout_sec=30):
                 raise
 
 
+BROADCAST_NAME_PREFIX = "LEA-CS-Glass"
+
+
+def broadcast_name():
+    """The name phones see: LEA-CS-Glass-<last 4 hex digits of the Ethernet MAC>, the same 4 characters as the
+    hostname (lea-trevally-<last4mac>, see trevally-set-hostname.sh)."""
+    try:
+        with open("/sys/class/net/eth0/address") as f:
+            mac = f.read().strip().replace(":", "").lower()
+    except OSError:
+        mac = ""
+    if len(mac) < 4 or mac == "000000000000":
+        return BROADCAST_NAME_PREFIX
+    return "%s-%s" % (BROADCAST_NAME_PREFIX, mac[-4:])
+
+
 def set_adapter_properties(adapter):
     props_iface = dbus.Interface(adapter, "org.freedesktop.DBus.Properties")
     props_iface.Set(ADAPTER_IFACE, "Powered", dbus.Boolean(True))
     props_iface.Set(ADAPTER_IFACE, "Pairable", dbus.Boolean(True))
     props_iface.Set(ADAPTER_IFACE, "Discoverable", dbus.Boolean(True))
     adapter_address = str(props_iface.Get(ADAPTER_IFACE, "Address"))
-    hostname = socket.gethostname().strip()
-    props_iface.Set(ADAPTER_IFACE, "Alias", dbus.String(hostname))
+    alias = broadcast_name()
+    props_iface.Set(ADAPTER_IFACE, "Alias", dbus.String(alias))
     log.info(
         "Adapter properties set: Powered, Pairable, Discoverable, Address=%s, Alias=%s",
         adapter_address,
-        hostname,
+        alias,
     )
 
 
