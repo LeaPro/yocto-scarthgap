@@ -36,3 +36,6 @@ IMAGE_INSTALL:append:lea-trevally = " \
 
 # IANA time zone database (used by the application-server DateTime leaf, e.g. America/Indiana/Indianapolis).
 IMAGE_INSTALL:append:lea-trevally = " tzdata"
+
+# Fallback fonts for the UI's characters beyond Latin-1 (Chinese, Arabic, Hebrew, Greek, Cyrillic, ...).
+IMAGE_INSTALL:append:lea-trevally = " trevally-fonts"

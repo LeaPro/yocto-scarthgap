@@ -16,7 +16,9 @@ S = "${WORKDIR}/git"
 
 inherit cmake
 
-DEPENDS = "libdrm libevdev hidapi pkgconfig-native"
+# freetype: application-server draws the characters its bitmap fonts don't have from TTF/OTF fonts
+# (CONFIG_LV_USE_FREETYPE in trevally.defconfig; the fonts are the trevally-fonts recipe).
+DEPENDS = "libdrm libevdev hidapi freetype pkgconfig-native"
 
 # Build lvgl/lvgl_linux as shared libraries so application-server can link
 # against them from the SDK and load them at runtime on target, matching the
