@@ -9,7 +9,6 @@ import sys
 import signal
 import logging
 import os
-import socket
 from time import sleep
 import dbus
 import dbus.service
@@ -34,8 +33,28 @@ AGENT_IFACE = "org.bluez.Agent1"
 AGENT_MGR_IFACE = "org.bluez.AgentManager1"
 DEVICE_IFACE = "org.bluez.Device1"
 A2DP_SOURCE_UUID = "0000110a-0000-1000-8000-00805f9b34fb"
-RECONNECT_INTERVAL_SEC = 15
 LEGACY_PIN = os.getenv("TREVALLY_BT_LEGACY_PIN", "0000")
+# Numeric-comparison code of the pairing in progress (6 digits), for the application-server to show; absent when none
+PASSKEY_FILE = os.getenv("TREVALLY_BT_PASSKEY_FILE", "/run/trevally-bt-passkey")
+
+
+def publish_passkey(passkey):
+    tmp = PASSKEY_FILE + ".tmp"
+    try:
+        with open(tmp, "w") as f:
+            f.write("%06u\n" % int(passkey))
+        os.replace(tmp, PASSKEY_FILE)
+    except OSError as err:
+        log.warning("Could not publish passkey to %s: %s", PASSKEY_FILE, err)
+
+
+def clear_passkey():
+    try:
+        os.remove(PASSKEY_FILE)
+    except FileNotFoundError:
+        pass
+    except OSError as err:
+        log.warning("Could not remove %s: %s", PASSKEY_FILE, err)
 
 
 def device_path_to_addr(device_path):
@@ -79,6 +98,7 @@ class BlueZAgent(dbus.service.Object):
 
     @dbus.service.method(AGENT_IFACE, in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, passkey):
+        publish_passkey(passkey)
         log.info(
             "RequestConfirmation accept: %s (%s), passkey=%s",
             device_path_to_addr(device),
@@ -140,6 +160,7 @@ class BlueZAgent(dbus.service.Object):
 
     @dbus.service.method(AGENT_IFACE, in_signature="", out_signature="")
     def Cancel(self):
+        clear_passkey()
         log.info("Operation cancelled")
 
 
@@ -148,6 +169,8 @@ def monitor_device_state(bus):
         del invalidated
         if interface != DEVICE_IFACE:
             return
+        if "Paired" in changed:
+            clear_passkey()  # pairing finished (or failed): the code is no longer relevant
         interesting = {}
         for key in ("Paired", "Bonded", "Trusted", "Connected", "ServicesResolved", "RSSI"):
             if key in changed:
@@ -156,10 +179,6 @@ def monitor_device_state(bus):
             return
         addr = device_path_to_addr(path) if path else "unknown"
         log.info("Device state change %s (%s): %s", addr, path or "", dict(interesting))
-
-        # React quickly to disconnect/pairing state transitions.
-        if any(k in interesting for k in ("Connected", "Paired", "Trusted")):
-            reconnect_trusted_devices(bus)
 
     bus.add_signal_receiver(
         on_properties_changed,
@@ -186,18 +205,34 @@ def wait_for_adapter(bus, timeout_sec=30):
                 raise
 
 
+BROADCAST_NAME_PREFIX = "LEA-CS-Glass"
+
+
+def broadcast_name():
+    """The name phones see: LEA-CS-Glass-<last 4 hex digits of the Ethernet MAC>, the same 4 characters as the
+    hostname (lea-trevally-<last4mac>, see trevally-set-hostname.sh)."""
+    try:
+        with open("/sys/class/net/eth0/address") as f:
+            mac = f.read().strip().replace(":", "").lower()
+    except OSError:
+        mac = ""
+    if len(mac) < 4 or mac == "000000000000":
+        return BROADCAST_NAME_PREFIX
+    return "%s-%s" % (BROADCAST_NAME_PREFIX, mac[-4:])
+
+
 def set_adapter_properties(adapter):
     props_iface = dbus.Interface(adapter, "org.freedesktop.DBus.Properties")
     props_iface.Set(ADAPTER_IFACE, "Powered", dbus.Boolean(True))
     props_iface.Set(ADAPTER_IFACE, "Pairable", dbus.Boolean(True))
     props_iface.Set(ADAPTER_IFACE, "Discoverable", dbus.Boolean(True))
     adapter_address = str(props_iface.Get(ADAPTER_IFACE, "Address"))
-    hostname = socket.gethostname().strip()
-    props_iface.Set(ADAPTER_IFACE, "Alias", dbus.String(hostname))
+    alias = broadcast_name()
+    props_iface.Set(ADAPTER_IFACE, "Alias", dbus.String(alias))
     log.info(
         "Adapter properties set: Powered, Pairable, Discoverable, Address=%s, Alias=%s",
         adapter_address,
-        hostname,
+        alias,
     )
 
 
@@ -207,33 +242,6 @@ def register_agent(bus):
     manager.RegisterAgent(AGENT_PATH, AGENT_CAPS)
     manager.RequestDefaultAgent(AGENT_PATH)
     log.info("Agent registered at %s with capability %s", AGENT_PATH, AGENT_CAPS)
-
-
-def reconnect_trusted_devices(bus):
-    try:
-        obj_manager = dbus.Interface(
-            bus.get_object(BLUEZ_SERVICE, "/"),
-            "org.freedesktop.DBus.ObjectManager",
-        )
-        objects = obj_manager.GetManagedObjects()
-        for path, interfaces in objects.items():
-            if DEVICE_IFACE not in interfaces:
-                continue
-            props = interfaces[DEVICE_IFACE]
-            if props.get("Trusted") and props.get("Paired") and not props.get("Connected"):
-                addr = str(props.get("Address", ""))
-                if not addr:
-                    continue
-                log.info("ConnectProfile A2DP Source -> %s", addr)
-                try:
-                    device_obj = bus.get_object(BLUEZ_SERVICE, path)
-                    device_iface = dbus.Interface(device_obj, DEVICE_IFACE)
-                    device_iface.ConnectProfile(A2DP_SOURCE_UUID)
-                    log.info("ConnectProfile succeeded for %s", addr)
-                except dbus.DBusException as err:
-                    log.warning("ConnectProfile %s failed: %s", addr, err)
-    except Exception as err:  # broad-except kept to mirror source resilience
-        log.warning("reconnect_trusted_devices error: %s", err)
 
 
 def main():
@@ -248,14 +256,10 @@ def main():
     try:
         adapter = wait_for_adapter(bus)
         set_adapter_properties(adapter)
+        clear_passkey()
         BlueZAgent(bus, AGENT_PATH)
         register_agent(bus)
         monitor_device_state(bus)
-        reconnect_trusted_devices(bus)
-        GLib.timeout_add_seconds(
-            RECONNECT_INTERVAL_SEC,
-            lambda: reconnect_trusted_devices(bus) or True,
-        )
         log.info("BlueZ agent ready; waiting for phone to connect")
 
         mainloop = GLib.MainLoop()

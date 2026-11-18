@@ -44,7 +44,11 @@ all: u-boot application-server gpioTool kvsTool ipcTool image
 sdk: $(SDK_SETUP_TARGET)
 
 $(SDK_SETUP_TARGET): $(SDK_INSTALLER_ARCHIVE)
-	$(firstword $(wildcard $(SDK_INSTALLER_DIR)/*.sh)) -y -d $(SDK_SETUP_DIR)
+	mkdir -p $(SDK_INSTALLER_DIR)
+	tar -xjf $(SDK_INSTALLER_ARCHIVE) -C $(SDK_INSTALLER_DIR)
+	installer=$$(ls $(SDK_INSTALLER_DIR)/*-toolchain-*.sh 2>/dev/null | head -n 1); \
+	if [[ -z "$$installer" ]]; then echo "error: no SDK installer found in $(SDK_INSTALLER_DIR)" >&2; exit 1; fi; \
+	"$$installer" -y -d $(SDK_SETUP_DIR)
 	touch $(SDK_SETUP_TARGET)
 
 $(SDK_INSTALLER_ARCHIVE):

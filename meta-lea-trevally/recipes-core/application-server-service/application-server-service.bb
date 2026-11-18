@@ -1,18 +1,18 @@
 SUMMARY = "Trevally application server"
 DESCRIPTION = "Service that runs the Trevally application server"
 LICENSE = "CLOSED"
-DEPENDS = "boost lmdb openssl curl bash python3"
+DEPENDS = "boost lmdb openssl curl bash python3 hidapi lvgl-trevally"
+RDEPENDS:${PN} = "libudev libdrm hidapi lvgl-trevally"
+INSANE_SKIP:${PN} += "file-rdeps"
 PR = "r1"
 
 SRC_URI =  " \
     file://application-server.service \
-    file://application-server \
-    file://gpioTool \
-    file://ipcTool \
-    file://kvsTool \
     file://gpioNumber.py \
-    file://libsplayer-1.so \
 "
+
+# Prebuilt (gitignored) binaries; absent when building the SDK only.
+SRC_URI += "${@bb.utils.contains('DISABLE_CUSTOM_SERVICE_BINARIES', '1', '', 'file://application-server file://gpioTool file://ipcTool file://kvsTool file://libsplayer-1.so', d)}"
 
 do_compile () {
 }
