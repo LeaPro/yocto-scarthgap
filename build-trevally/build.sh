@@ -32,8 +32,9 @@ make $REBUILD_FLAG image
 
 # encrypt the compressed rootfs tarball - must match the decryption in sftp-monitor.sh
 DATE=`date +%m-%d-%Y`
+VERSION=`python3 getVersionNumber.py`
 INFILE=./deploy-ti/images/lea-trevally/core-image-minimal-lea-trevally.rootfs.tar.xz
-OUTFILE=postBuild/images/TV-LEA-Trevally-${DATE}.tar.xz.enc
+OUTFILE=postBuild/images/TV-${VERSION}-LEA-Trevally-${DATE}.tar.xz.enc
 mkdir -p postBuild/images
 rm -rf $OUTFILE
 openssl enc -aes-256-cbc -salt -in $INFILE -out $OUTFILE -k GCEA
