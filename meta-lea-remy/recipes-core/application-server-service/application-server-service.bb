@@ -9,10 +9,11 @@ SRC_URI =  " \
     file://application-server \
     file://gpioTool \
     file://fpgaTool \
+    file://dspTool \
     file://ipcTool \
     file://kvsTool \
     file://stm32flash \
-    file://fpgaUpdate.sh \
+    file://slotIO.zip;unpack=0 \
     file://fpga.zip;unpack=0 \
     file://gpioNumber.py \
 "
@@ -39,10 +40,11 @@ do_install () {
     install -m 0755 ${WORKDIR}/application-server ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/gpioTool ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/fpgaTool ${D}/${sbindir}
+    install -m 0755 ${WORKDIR}/dspTool ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/ipcTool ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/kvsTool ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/stm32flash ${D}/${sbindir}
-    install -m 0755 ${WORKDIR}/fpgaUpdate.sh ${D}/${sbindir}
+    install -m 0755 ${WORKDIR}/slotIO.zip ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/fpga.zip ${D}/${sbindir}
     install -m 0755 ${WORKDIR}//gpioNumber.py ${D}/${sbindir}
 

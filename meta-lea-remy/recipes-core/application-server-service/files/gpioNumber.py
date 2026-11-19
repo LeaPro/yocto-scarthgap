@@ -5,18 +5,24 @@ import argparse
 
 def get_gpio_number(port: str, pin: int) -> int:
     """
-    Maps an AM62x GPIO port and pin to the /sys/class/gpio global number.
+    Maps an AM62x GPIO port or I2C expander and pin to the /sys/class/gpio
+    global number.
     """
-    # Standard AM62x Memory-mapped addresses for the GPIO controllers
-    am62x_mapping = {
+    gpio_mapping = {
         "GPIO0": "600000.gpio",
         "GPIO1": "601000.gpio",
-        "MCU_GPIO0": "4201000.gpio"
+        "MCU_GPIO0": "4201000.gpio",
+        "PCA9534": "1-0038",
     }
     
-    target_label = am62x_mapping.get(port.upper())
+    port_name = port.upper()
+    target_label = gpio_mapping.get(port_name)
     if not target_label:
-        print(f"Error: Unknown port '{port}'. Valid choices are: {', '.join(am62x_mapping.keys())}", file=sys.stderr)
+        print(f"Error: Unknown port '{port}'. Valid choices are: {', '.join(gpio_mapping.keys())}", file=sys.stderr)
+        sys.exit(1)
+
+    if port_name == "PCA9534" and not 0 <= pin < 8:
+        print("Error: PCA9534 pin must be between 0 and 7", file=sys.stderr)
         sys.exit(1)
         
     gpio_path = "/sys/class/gpio"
@@ -45,12 +51,12 @@ def get_gpio_number(port: str, pin: int) -> int:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Map AM62x (Yocto Scarthgap) GPIO Port & Pin to Sysfs GPIO number."
+        description="Map AM62x or I2C expander GPIO & Pin to Sysfs GPIO number."
     )
     parser.add_argument(
         "port", 
         type=str, 
-        help="The GPIO port name (e.g., GPIO0, GPIO1, MCU_GPIO0)"
+        help="The GPIO port name (e.g., GPIO0, GPIO1, MCU_GPIO0, PCA9534)"
     )
     parser.add_argument(
         "pin", 

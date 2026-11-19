@@ -111,3 +111,7 @@ build-*/conf/conf-summary.txt
 
 build-remy/postBuild/sdcard.img
 
+
+meta-lea-remy/recipes-core/application-server-service/files/dspTool
+
+meta-lea-remy/recipes-core/application-server-service/files/RemyDsp.ldr

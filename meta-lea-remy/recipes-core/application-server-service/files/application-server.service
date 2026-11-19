@@ -4,7 +4,9 @@ After=basic.target
 
 [Service]
 Type=simple
+ExecStartPre=/usr/sbin/fpgaTool --update fpga.zip
 ExecStart=/usr/sbin/application-server
+WorkingDirectory=/usr/sbin
 Restart=on-failure
 RestartSec=5s
 #StandardOutput=tty

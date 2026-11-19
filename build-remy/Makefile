@@ -29,7 +29,7 @@ $(error This Makefile must be run inside the Docker container. Use ./docker-run 
 endif
 endif
 
-SUBDIR_TARGETS:=application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP
+SUBDIR_TARGETS:=application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP slotIO
 ACTIVE_SUBDIR_TARGET:=$(firstword $(filter $(SUBDIR_TARGETS),$(MAKECMDGOALS)))
 EXTRA_SUBDIR_GOALS:=$(if $(ACTIVE_SUBDIR_TARGET),$(filter-out $(ACTIVE_SUBDIR_TARGET),$(MAKECMDGOALS)),)
 
@@ -97,6 +97,11 @@ stm32flash:
 	@source ${TOOLCHAIN_SETUP} && $(MAKE) --directory=${WEBSOCKETAPI_DIR}/stm32flash $(EXTRA_SUBDIR_GOALS)
 	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${WEBSOCKETAPI_DIR}/stm32flash/stm32flash ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
 
+slotIO:
+	@echo building $@
+	@$(MAKE) --directory=${REMY_DIR}/$@ $(EXTRA_SUBDIR_GOALS)
+	@if [[ -z "$(EXTRA_SUBDIR_GOALS)" ]]; then cp --update ${REMY_DIR}/slotIO/obj/slotIO.zip ${YOCTO_DIR}/meta-lea-remy/recipes-core/application-server-service/files; fi
+	
 FPGA:
 	@echo building $@
 	@PATH=$(QUARTUS_PATH):$$PATH && $(MAKE) --directory=${REMY_DIR}/$@ $(EXTRA_SUBDIR_GOALS)
@@ -119,9 +124,7 @@ image-quick: dtb
 	mkdir -p ${BUILD_DIR}/postBuild/images
 	@cp $(BUILD_DIR)/deploy-ti/images/lea-remy/core-image-minimal-lea-remy.rootfs.tar.xz ${BUILD_DIR}/postBuild/images
 
-image: FPGA application-server gpioTool fpgaTool kvsTool ipcTool stm32flash image-quick
-#image: u-boot FPGA DSP application-server gpioTool fpgaTool kvsTool ipcTool stm32flash image-quick
-#image: u-boot application-server gpioTool fpgaTool kvsTool ipcTool stm32flash FPGA DSP image-quick
+image: FPGA DSP application-server gpioTool fpgaTool kvsTool ipcTool stm32flash slotIO image-quick
 
 kernel:
 	@echo building $@
@@ -154,6 +157,7 @@ help:
 	@echo "  kvsTool"
 	@echo "  ipcTool"
 	@echo "  stm32flash"
+	@echo "  slotIO"
 	@echo "  FPGA"
 	@echo "  DSP"
 	@echo "  DSP-fast"
