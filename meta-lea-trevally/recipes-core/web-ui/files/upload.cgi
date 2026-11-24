@@ -5,7 +5,49 @@ use warnings;
 use CGI;
 use File::Basename;
 
-my $q = CGI->new;
+# Publish firmware upload progress to /misc/fwDownloadProgress as the request body
+# arrives (requires server.stream-request-body in lighttpd.conf), and set
+# /misc/fwUpdateStatus to Downloading while it does, so a new upload also replaces
+# the end state (e.g. Finished) of an update that just completed.
+my $content_length = $ENV{'CONTENT_LENGTH'} || 0;
+my $last_progress = -1;
+my $progress_reported = 0;
+my $progress_finished = 0;
+my $final_category; # set once the form is parsed
+
+sub set_fw_update {
+    my ($status, $progress) = @_;
+    my $params = '"fwDownloadProgress":' . int($progress);
+    $params = '"fwUpdateStatus":"' . $status . '",' . $params if defined $status;
+    # stdout is the HTTP response, so keep ipcTool output out of it
+    system("ipcTool --port=1236 --url=/misc --method=set --params='{$params}' >/dev/null 2>&1");
+}
+
+sub upload_hook {
+    my ($client_filename, $buffer, $bytes_read) = @_;
+    # only firmware archives, matching what sftp-monitor.sh handles
+    return unless $content_length > 0 && defined $client_filename && $client_filename =~ /\.tar\.xz\.enc$/i;
+    my $progress = int($bytes_read * 100 / $content_length);
+    # the request body includes multipart overhead; 100 is published once the file is saved
+    $progress = 99 if $progress > 99;
+    return if $progress == $last_progress;
+    $last_progress = $progress;
+    set_fw_update($progress_reported ? undef : 'Downloading', $progress);
+    $progress_reported = 1;
+}
+
+# let END run if lighttpd stops the script (e.g. the client went away)
+$SIG{$_} = sub { exit 1 } for qw(TERM HUP PIPE);
+
+# an upload that turned out not to be a firmware update goes back to None; one that broke off failed
+END {
+    if ($progress_reported && !$progress_finished) {
+        my $not_firmware = defined $final_category && $final_category ne 'firmware-update';
+        set_fw_update($not_firmware ? 'None' : 'DownloadingFail', 0);
+    }
+}
+
+my $q = CGI->new(\&upload_hook, undef, 1);
 
 sub h {
     my ($s) = @_;
@@ -30,10 +72,10 @@ if ($method ne 'POST') {
     exit 0;
 }
 
-my $filename = $q->param('filename') // '';
+my $filename = $q->param('file') // '';
 my $category = $q->param('category') // 'misc-files';
 my $metadata_json = $q->param('metadata_json');
-my $upload_fh = $q->upload('filename');
+my $upload_fh = $q->upload('file');
 
 $metadata_json = '' unless defined $metadata_json;
 $metadata_json =~ s/\r\n/\n/g;
@@ -75,6 +117,7 @@ if (!exists $category_dir{$category}) {
     $category = 'firmware-update'; # default here for backward compatibility (802.1x certs are handled by sftp-monitor service)
 }
 
+$final_category = $category;
 my $destination_dir = $category_dir{$category};
 my $server_path = "$destination_dir/$filename";
 
@@ -100,6 +143,11 @@ while (read($upload_fh, my $buf, 4096)) {
 
 close($output_fh);
 close($upload_fh);
+
+if ($progress_reported && $category eq 'firmware-update') {
+    set_fw_update(undef, 100);
+    $progress_finished = 1;
+}
 
 my $metadata_path = "$server_path.metadata.json";
 if ($metadata_present && $metadata_valid) {

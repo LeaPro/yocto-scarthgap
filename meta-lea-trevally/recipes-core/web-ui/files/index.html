@@ -18,10 +18,10 @@
 
     <div class="box">
       <h2>Upload Test</h2>
-      <form action="/cgi-bin/upload.cgi" method="post" enctype="multipart/form-data">
+      <form action="/http-multipart-form-data-upload.cgi" method="post" enctype="multipart/form-data">
         <p>
-          <label for="filename">Select file:</label>
-          <input id="filename" name="filename" type="file" required>
+          <label for="file">Select file:</label>
+          <input id="file" name="file" type="file" required>
         </p>
         <p>
           <label for="category">Category:</label>
@@ -43,7 +43,7 @@
     </div>
 
     <p>
-      Target endpoint: <code>/cgi-bin/upload.cgi</code>
+      Target endpoint: <code>/http-multipart-form-data-upload.cgi</code>
     </p>
   </main>
 </body>
