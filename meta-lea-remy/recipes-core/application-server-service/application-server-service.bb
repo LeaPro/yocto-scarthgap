@@ -15,6 +15,7 @@ SRC_URI =  " \
     file://stm32flash \
     file://slotIO.zip;unpack=0 \
     file://fpga.zip;unpack=0 \
+    file://RemyDsp.ldr \
     file://gpioNumber.py \
 "
 # file://libsplayer-1.so
@@ -46,6 +47,7 @@ do_install () {
     install -m 0755 ${WORKDIR}/stm32flash ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/slotIO.zip ${D}/${sbindir}
     install -m 0755 ${WORKDIR}/fpga.zip ${D}/${sbindir}
+    install -m 0755 ${WORKDIR}/RemyDsp.ldr ${D}/${sbindir}
     install -m 0755 ${WORKDIR}//gpioNumber.py ${D}/${sbindir}
 
     #install -d ${D}${libdir}

@@ -5,6 +5,10 @@ After=basic.target
 [Service]
 Type=simple
 ExecStartPre=/usr/sbin/fpgaTool --update fpga.zip
+ExecStartPre=/usr/sbin/dspTool --reset --dsp=0 --boot=RemyDsp.ldr
+ExecStartPre=/usr/sbin/dspTool --dsp=1 --boot=RemyDsp.ldr
+ExecStartPre=/usr/sbin/dspTool --dsp=2 --boot=RemyDsp.ldr
+ExecStartPre=/usr/sbin/dspTool --dsp=3 --boot=RemyDsp.ldr
 ExecStart=/usr/sbin/application-server
 WorkingDirectory=/usr/sbin
 Restart=on-failure

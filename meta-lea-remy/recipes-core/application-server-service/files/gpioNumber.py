@@ -66,7 +66,7 @@ def main():
     parser.add_argument(
         "--export", 
         action="store_true", 
-        help="Output just the raw number (useful for shell scripting: `export $(python3 gpio_map.py GPIO1 12 --export)`)"
+        help="Output just the raw number (useful for shell scripting: `export $(python3 gpioNumber.py GPIO1 12 --export)`)"
     )
 
     args = parser.parse_args()
